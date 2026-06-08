@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld('characterArc', {
   readChapterFromDb: (projectId: string, chapterId: string) => ipcRenderer.invoke('characterarc:ai-read-chapter', { projectId, chapterId }),
   /** 从 DB 读取章节版本（agent 编辑撤销用） */
   readChapterVersionFromDb: (projectId: string, versionId: string) => ipcRenderer.invoke('characterarc:ai-read-chapter-version', { projectId, versionId }),
+  commitChapterEdit: (payload: unknown) => ipcRenderer.invoke('characterarc:commit-chapter-edit', toIpcPayload(payload)),
   /** 监听流式 AI 的增量文本事件，返回取消监听的清理函数 */
   onAiStreamEvent: (callback: (payload: unknown) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, payload: unknown) => callback(payload)
@@ -169,7 +170,16 @@ contextBridge.exposeInMainWorld('characterArc', {
   // ── AI 助手会话 ──
   listSessions: (projectId: string) => ipcRenderer.invoke('characterarc:session-list', projectId),
   loadSession: (sessionId: string) => ipcRenderer.invoke('characterarc:session-load', sessionId),
-  saveSession: (payload: { id: string; projectId: string; title: string; messages: unknown[] }) =>
+  saveSession: (payload: {
+    id: string
+    projectId: string
+    title: string
+    messages: unknown[]
+    proposal?: unknown | null
+    lastProposalPrompt?: string
+    lastAssistantReply?: string
+    orchestrator?: unknown | null
+  }) =>
     ipcRenderer.invoke('characterarc:session-save', toIpcPayload(payload)),
   deleteSession: (sessionId: string) => ipcRenderer.invoke('characterarc:session-delete', sessionId),
 

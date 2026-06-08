@@ -33,7 +33,8 @@ const NOOP_AGENT_HANDLERS: AiAgentStreamHandlers = {
   onToolUseStart: () => {},
   onToolResult: () => {},
   onAgentStatus: () => {},
-  onEditApplied: () => {}
+  onEditApplied: () => {},
+  onEditProposed: () => {}
 }
 
 export async function runAgentTask(
@@ -100,7 +101,8 @@ export async function runAgentTask(
 
   const chapterTools = createChapterTools({
     currentChapterId: chapterId || '',
-    onEditApplied: NOOP_AGENT_HANDLERS.onEditApplied
+    onEditApplied: NOOP_AGENT_HANDLERS.onEditApplied,
+    onEditProposed: NOOP_AGENT_HANDLERS.onEditProposed
   })
 
   const projectDataTools = createProjectDataTools()

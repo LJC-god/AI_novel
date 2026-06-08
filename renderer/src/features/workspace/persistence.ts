@@ -78,11 +78,16 @@ export function createWorkspacePersistence(deps: WorkspacePersistenceDeps) {
     }
   }
 
-  function schedulePersist(mode: 'fast' | 'autosave' = 'autosave'): void {
+  function schedulePersist(
+    mode: 'fast' | 'autosave' = 'autosave',
+    options: { syncWorkspace?: boolean } = {}
+  ): void {
     if (!deps.hasHydrated.value) {
       return
     }
-    scheduleWorkspaceSync()
+    if (options.syncWorkspace !== false) {
+      scheduleWorkspaceSync()
+    }
     const delay =
       mode === 'fast'
         ? FAST_PERSIST_DELAY_MS

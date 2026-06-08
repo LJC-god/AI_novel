@@ -45,7 +45,9 @@ const GLOBAL_ASSISTANT_SYSTEM = `你是 CharacterArc 的项目级创作助理。
 4. 当用户要求修正设定时，先确认你理解到的修正内容，再说明会影响哪些部分。
 5. 当用户要求整理设定时，优先输出可落地的结构化建议，而不是空泛口号。
 6. 禁止把不确定内容写成既定事实；对尚未确认的补完建议，要明确标注为“建议补完”或“待确认”。
-7. 输出使用简体中文，不要返回 JSON。`
+7. 如果用户说“我有一份草稿 / 大纲 / 角色设定 / 历史时间线”，但没有实际粘贴草稿正文，你必须先请用户把草稿内容发来；不要改为整理项目里已有的大纲、角色或世界观。
+8. 项目里已有资料只作为参考上下文，不能在用户明确要“录入草稿”但尚未提供草稿时，被当作本次要整理的原始输入。
+9. 输出使用简体中文，不要返回 JSON。`
 
 function formatWorkflowDocuments(source: unknown): string {
   if (!Array.isArray(source)) {
@@ -55,8 +57,8 @@ function formatWorkflowDocuments(source: unknown): string {
   return source
     .map((item) => item as Record<string, unknown>)
     .filter((item) => String(item.content ?? '').trim())
-    .slice(0, 3)
-    .map((item) => `${truncateText(item.title, 40)}：${truncateText(item.content, 180)}`)
+    .slice(0, 6)
+    .map((item) => `${truncateText(item.title, 40)}：${truncateText(item.content, 1200)}`)
     .join('\n')
 }
 
@@ -67,12 +69,14 @@ function formatKnowledgeDocuments(source: unknown): string {
 
   return source
     .map((item) => item as Record<string, unknown>)
-    .slice(0, 5)
+    .slice(0, 12)
     .map((item, index) => {
       const title = String(item.title ?? '').trim() || `知识条目${index + 1}`
-      const summary = String(item.summary ?? '').trim() || String(item.content ?? '').trim().slice(0, 100)
+      const summary = String(item.summary ?? '').trim() || String(item.content ?? '').trim().slice(0, 300)
+      const content = String(item.content ?? '').trim()
       const sourceLabel = String(item.sourceLabel ?? '').trim()
-      return `${truncateText(title, 40)}${sourceLabel ? ` / ${truncateText(sourceLabel, 36)}` : ''}：${truncateText(summary, 120)}`
+      const body = content ? `${summary}\n${truncateText(content, 700)}` : summary
+      return `${truncateText(title, 40)}${sourceLabel ? ` / ${truncateText(sourceLabel, 36)}` : ''}：${truncateText(body, 900)}`
     })
     .join('\n')
 }
@@ -84,13 +88,16 @@ function formatProjectConstraints(source: unknown): string {
 
   return source
     .map((item) => item as Record<string, unknown>)
-    .slice(0, 8)
+    .slice(0, 24)
     .map((item) => {
       const title = truncateText(item.title, 40)
-      const content = truncateText(item.content, 160)
+      const content = truncateText(item.content, 420)
       const metadata = item.metadata && typeof item.metadata === 'object' ? item.metadata as Record<string, unknown> : {}
       const scope = truncateText(metadata.scope, 24)
-      return `${title}${scope ? ` / ${scope}` : ''}：${content}`
+      const weight = truncateText(metadata.weight, 16)
+      const locked = metadata.locked === false ? 'unlocked' : 'locked'
+      const meta = [scope, weight, locked].filter(Boolean).join(' / ')
+      return `${title}${meta ? ` / ${meta}` : ''}：${content}`
     })
     .filter(Boolean)
     .join('\n')
@@ -104,7 +111,7 @@ function resolveModeInstruction(mode: string): string {
       return '当前模式是“一致性检查”。优先输出问题、证据和建议修法，避免空泛评价。'
     case 'ingest':
     default:
-      return '当前模式是“录入整理”。优先帮助用户把长设定、草稿和口述内容整理成结构化项目资产。'
+      return '当前模式是“录入整理”。优先帮助用户把长设定、草稿和口述内容整理成结构化项目资产；如果用户只是表达“我有一份草稿”但没有提供正文，先请用户粘贴草稿，不要整理项目已有资料。'
   }
 }
 
@@ -116,18 +123,18 @@ const handler: TaskHandler = {
   buildPrompt(input: PromptBuildInput) {
     const { context, capabilityPreamble, skillsBlock, knowledgeBlock } = input
     const mode = String(context.assistantMode ?? 'ingest')
-    const retrievalBlock = knowledgeBlock ? `\n\n检索到的项目记忆与参考资料：\n${truncateText(knowledgeBlock, 1200)}` : ''
+    const retrievalBlock = knowledgeBlock ? `\n\n检索到的项目记忆与参考资料：\n${truncateText(knowledgeBlock, 2400)}` : ''
     const skillsSummary = skillsBlock ? truncateText(skillsBlock, 1000) : ''
-    const worldviewEntries = takeRecords(context.worldviewEntries, 6, { content: 280, title: 60, type: 24 })
-    const characters = takeRecords(context.characters, 6, { description: 240, name: 40, role: 40 })
-    const organizations = takeRecords(context.organizations, 4, { description: 180, name: 40, type: 30, motto: 80 })
-    const characterRelationships = takeRecords(context.characterRelationships, 8, { description: 180, type: 40 })
-    const outlineItems = takeRecords(context.outlineItems, 8, { summary: 240, conflict: 120, title: 60 })
-    const plotThreads = takeRecords(context.plotThreads, 6, { description: 180, title: 60 })
-    const inspirationEntries = takeRecords(context.inspirationEntries, 5, { content: 160, title: 60, type: 24 })
+    const worldviewEntries = takeRecords(context.worldviewEntries, 24, { content: 900, title: 80, type: 32 })
+    const characters = takeRecords(context.characters, 24, { description: 700, name: 50, role: 60 })
+    const organizations = takeRecords(context.organizations, 16, { description: 500, name: 50, type: 40, motto: 120 })
+    const characterRelationships = takeRecords(context.characterRelationships, 36, { description: 360, type: 50 })
+    const outlineItems = takeRecords(context.outlineItems, 48, { summary: 650, conflict: 220, title: 80 })
+    const plotThreads = takeRecords(context.plotThreads, 20, { description: 420, title: 80 })
+    const inspirationEntries = takeRecords(context.inspirationEntries, 16, { content: 360, title: 80, type: 32 })
 
     return {
-      system: `${capabilityPreamble.system}\n\n${GLOBAL_ASSISTANT_SYSTEM}`,
+      system: `${capabilityPreamble.system}\n\n${GLOBAL_ASSISTANT_SYSTEM}\n\n补充约束：项目约束里标记为 locked 的规则、用户写明 [锁定] 的内容、以及 weight=core 的规则，均是最高优先级设定。你不能覆盖、反转、弱化它们；如果用户要求修改锁定项，只能先指出冲突并请求确认。`,
       user: `${capabilityPreamble.user}
 
 请处理当前项目级创作请求。
@@ -181,6 +188,7 @@ ${String(context.userPrompt ?? '')}
 
 回答要求：
 1. 如果用户是在录入设定，优先帮他拆成结构化条目、时间线节点、人物卡线索或大纲节点。
+   - 但如果用户只是说有草稿、想录入、想整理，却没有在“用户请求”中提供实际草稿正文，请只追问“请把草稿内容粘贴过来”，不要整理上方项目资料里的现有大纲。
 2. 如果用户是在修正设定，先用 1 到 3 句确认你理解到的修正内容，再说明建议更新的对象和影响范围。
 3. 如果用户要求调整大纲，优先说明“调整建议 + 连锁影响”。
 4. 如果用户要求一致性检查，按“问题 -> 证据 -> 最小修法”输出。
@@ -196,7 +204,7 @@ ${String(context.userPrompt ?? '')}
     return Boolean((result as GlobalAssistantResult).content?.trim())
   },
   resolveMaxTokens(): number {
-    return 1400
+    return 2400
   }
 }
 

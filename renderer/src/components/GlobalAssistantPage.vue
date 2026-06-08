@@ -24,6 +24,7 @@ import { useGlobalAssistant } from '@/composables/useGlobalAssistant'
 import type { AssistantMode } from '@/composables/useGlobalAssistant'
 import type { ToolGroup } from '@/composables/useGlobalAssistant'
 import type { AssistantToolCall } from '@/types/app'
+import GlobalAssistantDiffReviewDialog from '@/components/GlobalAssistantDiffReviewDialog.vue'
 import appLogo from '@/assets/app-logo.png'
 
 const a = useGlobalAssistant({ activeViewLabel: () => '全局AI助手' })
@@ -33,6 +34,7 @@ const composerRef = ref<HTMLTextAreaElement | null>(null)
 const showModeMenu = ref(false)
 const railCollapsed = ref(false)
 const collapsedGroups = reactive<Record<string, boolean>>({})
+const showDiffReview = ref(false)
 
 const hasThread = computed(() => Boolean(a.messages.value.length || a.isSending.value || a.isRunningAudit.value))
 
@@ -84,6 +86,22 @@ function onSend(): void {
 function onSuggest(action: { label: string; prompt: string }): void {
   a.fillQuickAction(action)
   nextTick(() => composerRef.value?.focus())
+}
+
+function applyAllFromReview(): void {
+  a.applyAllProposal()
+  showDiffReview.value = false
+}
+
+function applyFileFromReview(fileId: string): void {
+  if (a.applyProposalDiffFile(fileId) && a.proposalDiffStats.value.total === 0) {
+    showDiffReview.value = false
+  }
+}
+
+function clearFromReview(): void {
+  a.clearProposal()
+  showDiffReview.value = false
 }
 
 function autoResize(): void {
@@ -344,7 +362,7 @@ watch(
                     v-if="a.proposal.value && (a.proposal.value.constraintCreates.length || a.hasWorldviewApplyTarget() || a.hasCharacterApplyTarget() || a.hasOutlineApplyTarget())"
                     size="small"
                     type="primary"
-                    @click="a.applyAllProposal()"
+                    @click="showDiffReview = true"
                   >
                     全部写回
                   </NButton>
@@ -356,7 +374,7 @@ watch(
               <div v-if="a.proposal.value" class="ga-proposal__sections">
                 <!-- 项目约束 -->
                 <section v-if="a.proposal.value.constraintCreates.length" class="ga-section">
-                  <div class="ga-section__head"><span>项目约束</span><NButton size="tiny" secondary @click="a.applyConstraintProposal()">写回约束</NButton></div>
+                  <div class="ga-section__head"><span>项目约束</span><NButton size="tiny" secondary @click="showDiffReview = true">审查 Diff</NButton></div>
                   <div v-for="item in a.proposal.value.constraintCreates" :key="`gc-${item.title}`" class="ga-item">
                     <div class="ga-item__top"><strong>新增 · {{ item.title }}</strong><NTag size="small" round :bordered="false" type="warning">{{ item.scope }}</NTag></div>
                     <p>{{ item.reason }}</p>
@@ -366,7 +384,7 @@ watch(
 
                 <!-- 世界观 -->
                 <section v-if="a.proposal.value.worldviewCreates.length || a.proposal.value.worldviewUpdates.length" class="ga-section">
-                  <div class="ga-section__head"><span>世界观</span><NButton size="tiny" secondary :disabled="!a.hasWorldviewApplyTarget()" @click="a.applyWorldviewProposal()">写回世界观</NButton></div>
+                  <div class="ga-section__head"><span>世界观</span><NButton size="tiny" secondary :disabled="!a.hasWorldviewApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton></div>
                   <div v-for="item in a.proposal.value.worldviewCreates" :key="`wc-${item.title}`" class="ga-item">
                     <div class="ga-item__top"><strong>新增 · {{ item.title }}</strong><NTag size="small" round :bordered="false" type="info">{{ item.type }}</NTag></div>
                     <p>{{ item.content }}</p>
@@ -393,7 +411,7 @@ watch(
 
                 <!-- 人物卡 -->
                 <section v-if="a.proposal.value.characterCreates.length || a.proposal.value.characterUpdates.length" class="ga-section">
-                  <div class="ga-section__head"><span>人物卡</span><NButton size="tiny" secondary :disabled="!a.hasCharacterApplyTarget()" @click="a.applyCharacterProposal()">写回人物</NButton></div>
+                  <div class="ga-section__head"><span>人物卡</span><NButton size="tiny" secondary :disabled="!a.hasCharacterApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton></div>
                   <div v-for="item in a.proposal.value.characterCreates" :key="`cc-${item.name}`" class="ga-item">
                     <div class="ga-item__top"><strong>新增 · {{ item.name }}</strong><NTag v-if="item.role" size="small" round :bordered="false" type="info">{{ item.role }}</NTag></div>
                     <p>{{ item.description }}</p>
@@ -421,7 +439,7 @@ watch(
 
                 <!-- 大纲 -->
                 <section v-if="a.proposal.value.outlineCreates.length || a.proposal.value.outlineUpdates.length" class="ga-section">
-                  <div class="ga-section__head"><span>大纲</span><NButton size="tiny" secondary :disabled="!a.hasOutlineApplyTarget()" @click="a.applyOutlineProposal()">写回大纲</NButton></div>
+                  <div class="ga-section__head"><span>大纲</span><NButton size="tiny" secondary :disabled="!a.hasOutlineApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton></div>
                   <div v-for="item in a.proposal.value.outlineCreates" :key="`oc-${item.title}`" class="ga-item">
                     <div class="ga-item__top"><strong>新增 · {{ item.title }}</strong><NTag v-if="item.wordTarget" size="small" round :bordered="false" type="info">{{ item.wordTarget }}</NTag></div>
                     <p>{{ item.summary }}</p>
@@ -521,6 +539,18 @@ watch(
 
       <!-- TEMPLATE_THREAD -->
     </div>
+
+    <GlobalAssistantDiffReviewDialog
+      v-model:show="showDiffReview"
+      summary="全局助手写回审查"
+      :patch="a.proposalDiffPatch.value"
+      :files="a.proposalDiffFiles.value"
+      :stats="a.proposalDiffStats.value"
+      @apply-file="applyFileFromReview"
+      @apply-all="applyAllFromReview"
+      @regenerate="a.regenerateProposal()"
+      @clear="clearFromReview"
+    />
   </section>
 </template>
 

@@ -138,6 +138,11 @@ export function registerAiIpcHandlers(injectedDeps: AiIpcDeps): void {
                   if (!event.sender.isDestroyed()) {
                     event.sender.send('characterarc:ai-stream-event', { streamId, type: 'edit_applied', chapterId, editType, preview, versionId })
                   }
+                },
+                onEditProposed: (chapterId, proposalId, editType, preview, oldContent, newContent) => {
+                  if (!event.sender.isDestroyed()) {
+                    event.sender.send('characterarc:ai-stream-event', { streamId, type: 'edit_proposed', chapterId, proposalId, editType, preview, oldContent, newContent })
+                  }
                 }
               },
               controller.signal,
@@ -261,6 +266,11 @@ export function registerAiIpcHandlers(injectedDeps: AiIpcDeps): void {
               onEditApplied: (chapterId, editType, preview, versionId) => {
                 if (!event.sender.isDestroyed()) {
                   event.sender.send('characterarc:ai-stream-event', { streamId, type: 'edit_applied', chapterId, editType, preview, versionId })
+                }
+              },
+              onEditProposed: (chapterId, proposalId, editType, preview, oldContent, newContent) => {
+                if (!event.sender.isDestroyed()) {
+                  event.sender.send('characterarc:ai-stream-event', { streamId, type: 'edit_proposed', chapterId, proposalId, editType, preview, oldContent, newContent })
                 }
               }
             },

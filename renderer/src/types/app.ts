@@ -515,6 +515,15 @@ export interface AssistantEditEvent {
   versionId: string
 }
 
+export interface ChapterEditProposal {
+  proposalId: string
+  chapterId: string
+  editType: string
+  preview: string
+  oldContent: string
+  newContent: string
+}
+
 export interface AssistantTurn {
   text: string
   toolCalls: AssistantToolCall[]
@@ -979,6 +988,8 @@ export interface GlobalAssistantProposal {
     title: string
     content: string
     scope: string
+    weight?: 'core' | 'important' | 'supporting'
+    locked?: boolean
     reason: string
     keywords: string[]
   }>

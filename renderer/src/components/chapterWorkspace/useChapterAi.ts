@@ -3,7 +3,8 @@ import type { Ref } from 'vue'
 import { buildChapterAssistantContext } from '@/features/ai/chapterAssistantContext'
 import { useAppStore } from '@/stores/app'
 import { toIpcPayload } from '@/utils/ipcPayload'
-import type { ChapterInsertionMode } from '@/types/app'
+import type { ChapterEditProposal, ChapterInsertionMode } from '@/types/app'
+import type { GlobalAssistantProposalDiffFile } from '@/composables/useGlobalAssistant'
 import { getChapterPreviewText } from '@/features/chapters/editorContent'
 
 export type ChapterAiRole = 'user' | 'assistant'
@@ -56,6 +57,17 @@ export type ContextModule = 'chapter' | 'outline' | 'characters' | 'worldview' |
 
 const ALL_CONTEXT_MODULES: ContextModule[] = ['chapter', 'outline', 'characters', 'worldview', 'plotThreads', 'knowledge', 'deconstructionLibrary']
 
+function stripHtmlForDiff(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .trim()
+}
+
 export interface SessionSummary {
   id: string
   title: string
@@ -84,12 +96,23 @@ export function useChapterAi(): {
   applyToChapter: (content: string, mode: ChapterInsertionMode) => boolean
   registerStreamListener: () => void
   unregisterStreamListener: () => void
+  showDiffReview: Ref<boolean>
+  pendingEditProposals: Ref<ChapterEditProposal[]>
+  proposalDiffFiles: Ref<GlobalAssistantProposalDiffFile[]>
+  proposalDiffPatch: Ref<string>
+  proposalDiffStats: Ref<{ total: number; creatable: number; updatable: number; blocked: number }>
+  acceptEditProposal: (proposalId: string) => Promise<void>
+  acceptAllEditProposals: () => Promise<void>
+  rejectEditProposal: (proposalId: string) => void
+  clearEditProposals: () => void
 } {
   const appStore = useAppStore()
   const messages = ref<ChapterAiMessage[]>([])
   const isResponding = computed(() => appStore.isAiTaskRunning(TASK_KEY))
   const agentStatus = ref('')
   const enabledContextModules = reactive(new Set<ContextModule>(ALL_CONTEXT_MODULES))
+  const pendingEditProposals = ref<ChapterEditProposal[]>([])
+  const showDiffReview = ref(false)
 
   function toggleContextModule(mod: ContextModule): void {
     if (enabledContextModules.has(mod)) {
@@ -337,6 +360,18 @@ export function useChapterAi(): {
       return
     }
 
+    if (payload.type === 'edit_proposed') {
+      pendingEditProposals.value.push({
+        proposalId: payload.proposalId,
+        chapterId: payload.chapterId,
+        editType: payload.editType,
+        preview: payload.preview,
+        oldContent: payload.oldContent,
+        newContent: payload.newContent
+      })
+      return
+    }
+
     if (payload.type === 'agent_status') {
       agentStatus.value = payload.message
       return
@@ -353,12 +388,18 @@ export function useChapterAi(): {
       streamingMsgId = null
       agentStatus.value = ''
       resolve?.(msg?.content ?? '')
+
+      if (pendingEditProposals.value.length > 0) {
+        showDiffReview.value = true
+      }
       return
     }
 
     if (payload.type === 'canceled') {
+      console.log('[useChapterAi] canceled event received, streamingMsgId:', streamingMsgId)
       finalizeStreamingMsg()
       const msg = messages.value.find((m) => m.id === streamingMsgId)
+      console.log('[useChapterAi] found message:', msg ? { id: msg.id, content: msg.content, turns: msg.turns } : null)
 
       // 添加取消提示到消息中
       if (msg) {
@@ -370,25 +411,35 @@ export function useChapterAi(): {
         // 新结构：确保 turns 存在并添加取消消息
         if (!msg.turns) {
           msg.turns = []
+          console.log('[useChapterAi] created empty turns array')
         }
 
         if (msg.turns.length === 0) {
           // 没有任何 turn，创建一个显示取消消息
           msg.turns.push({ text: '已停止生成', toolCalls: [], editEvents: [] })
+          console.log('[useChapterAi] added cancel message to new turn')
         } else {
           const lastTurn = msg.turns[msg.turns.length - 1]
+          console.log('[useChapterAi] last turn:', { text: lastTurn.text, toolCallsCount: lastTurn.toolCalls.length })
 
           // 如果最后一个 turn 有工具调用但没有文本，创建新 turn 显示取消消息
           if (lastTurn.toolCalls.length > 0 && !lastTurn.text.trim()) {
             msg.turns.push({ text: '已停止生成', toolCalls: [], editEvents: [] })
+            console.log('[useChapterAi] added cancel message to new turn after tool calls')
           } else if (!lastTurn.text.trim()) {
             // 如果最后一个 turn 没有内容，直接设置文本
             lastTurn.text = '已停止生成'
+            console.log('[useChapterAi] set cancel message to last turn')
+          } else {
+            console.log('[useChapterAi] last turn already has text, not adding cancel message')
           }
         }
 
         // 标记为取消状态
         msg.isCanceled = true
+        console.log('[useChapterAi] marked message as canceled, final turns:', msg.turns)
+      } else {
+        console.log('[useChapterAi] ERROR: message not found!')
       }
 
       const reject = rejectStream
@@ -630,6 +681,85 @@ export function useChapterAi(): {
     return appStore.insertIntoChapter(content, mode)
   }
 
+  const proposalDiffFiles = computed<GlobalAssistantProposalDiffFile[]>(() =>
+    pendingEditProposals.value.map((p, index) => ({
+      id: p.proposalId,
+      title: `编辑 ${index + 1}: ${p.preview}`,
+      path: `chapter/${p.chapterId}/edit-${index + 1}`,
+      kind: 'note' as const,
+      action: 'update' as const,
+      oldText: stripHtmlForDiff(p.oldContent),
+      newText: stripHtmlForDiff(p.newContent),
+      reason: p.editType,
+      canApply: true
+    }))
+  )
+
+  const proposalDiffPatch = computed(() => {
+    return proposalDiffFiles.value.map((file) => {
+      const oldLines = file.oldText ? file.oldText.split('\n') : []
+      const newLines = file.newText ? file.newText.split('\n') : []
+      const header = [
+        `diff --git a/${file.path} b/${file.path}`,
+        `index ${file.id.slice(0, 7).padEnd(7, '0')}..proposal 100644`,
+        `--- a/${file.path}`,
+        `+++ b/${file.path}`,
+        `@@ -1,${oldLines.length} +1,${newLines.length} @@`
+      ]
+      const removed = oldLines.map((line) => `-${line}`)
+      const added = newLines.map((line) => `+${line}`)
+      return [...header, ...removed, ...added, ''].join('\n')
+    }).join('\n')
+  })
+
+  const proposalDiffStats = computed(() => ({
+    total: pendingEditProposals.value.length,
+    creatable: 0,
+    updatable: pendingEditProposals.value.length,
+    blocked: 0
+  }))
+
+  async function acceptEditProposal(proposalId: string): Promise<void> {
+    const proposal = pendingEditProposals.value.find((p) => p.proposalId === proposalId)
+    if (!proposal) return
+    const projectId = appStore.currentProject?.id
+    if (!projectId) return
+
+    await window.characterArc.commitChapterEdit({
+      projectId,
+      chapterId: proposal.chapterId,
+      oldContent: proposal.oldContent,
+      newContent: proposal.newContent
+    })
+    pendingEditProposals.value = pendingEditProposals.value.filter((p) => p.proposalId !== proposalId)
+    void appStore.reloadChapterFromDb(proposal.chapterId)
+  }
+
+  async function acceptAllEditProposals(): Promise<void> {
+    const projectId = appStore.currentProject?.id
+    if (!projectId) return
+
+    for (const proposal of [...pendingEditProposals.value]) {
+      await window.characterArc.commitChapterEdit({
+        projectId,
+        chapterId: proposal.chapterId,
+        oldContent: proposal.oldContent,
+        newContent: proposal.newContent
+      })
+      void appStore.reloadChapterFromDb(proposal.chapterId)
+    }
+    pendingEditProposals.value = []
+  }
+
+  function rejectEditProposal(proposalId: string): void {
+    pendingEditProposals.value = pendingEditProposals.value.filter((p) => p.proposalId !== proposalId)
+  }
+
+  function clearEditProposals(): void {
+    pendingEditProposals.value = []
+    showDiffReview.value = false
+  }
+
   return {
     messages,
     isResponding,
@@ -650,6 +780,15 @@ export function useChapterAi(): {
     refreshSessions,
     applyToChapter,
     registerStreamListener,
-    unregisterStreamListener
+    unregisterStreamListener,
+    showDiffReview,
+    pendingEditProposals,
+    proposalDiffFiles,
+    proposalDiffPatch,
+    proposalDiffStats,
+    acceptEditProposal,
+    acceptAllEditProposals,
+    rejectEditProposal,
+    clearEditProposals
   }
 }

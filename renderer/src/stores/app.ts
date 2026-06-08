@@ -68,7 +68,7 @@ import type {
   WorldviewEntry
 } from '@/types/app'
 
-type AssistantFocusPanel = 'world' | 'characters' | 'outline'
+type AssistantFocusPanel = 'world' | 'characters' | 'outline' | 'project-knowledge'
 
 interface AssistantFocusTarget {
   panel: AssistantFocusPanel
@@ -434,13 +434,30 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  function updateCurrentWorkspaceAssistantSession(
+    updater: (workspace: ProjectWorkspaceData) => ProjectWorkspaceData
+  ): void {
+    const projectId = selectedProjectId.value
+    ensureProjectWorkspace(projectId)
+    const baseWorkspace = projectWorkspaces.value[projectId] ?? normalizeProjectWorkspaceData(undefined)
+    projectWorkspaces.value = {
+      ...projectWorkspaces.value,
+      [projectId]: normalizeProjectWorkspaceData(updater(baseWorkspace))
+    }
+  }
+
   /** 用 updater 函数更新当前项目的工作区数据，并同步章节选择和工作区同步 */
-  function updateCurrentWorkspace(updater: (workspace: ProjectWorkspaceData) => ProjectWorkspaceData): void {
+  function updateCurrentWorkspace(
+    updater: (workspace: ProjectWorkspaceData) => ProjectWorkspaceData,
+    options: { syncWorkspace?: boolean } = {}
+  ): void {
     ensureProjectWorkspace(selectedProjectId.value)
     updateProjectWorkspace(selectedProjectId.value, updater)
     syncProjectWordCount(selectedProjectId.value)
     syncSelectedChapter()
-    scheduleWorkspaceSync()
+    if (options.syncWorkspace !== false) {
+      scheduleWorkspaceSync()
+    }
   }
 
   function syncProjectWordCount(projectId: string): void {
@@ -1100,6 +1117,7 @@ export const useAppStore = defineStore('app', () => {
     summary?: string
     keywords?: string[]
     scope?: string
+    weight?: 'core' | 'important' | 'supporting'
     locked?: boolean
   }): void {
     const title = String(payload.title ?? '').trim()
@@ -1127,7 +1145,9 @@ export const useAppStore = defineStore('app', () => {
       metadata: {
         ...(existing?.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
         scope: String(payload.scope ?? '').trim() || String(existing?.metadata?.scope ?? '').trim() || 'project',
-        locked: payload.locked ?? existing?.metadata?.locked ?? true
+        weight: payload.weight ?? existing?.metadata?.weight ?? 'core',
+        locked: payload.locked ?? existing?.metadata?.locked ?? true,
+        source: 'global-assistant'
       },
       createdAt: existing?.createdAt || now,
       updatedAt: now
@@ -2294,6 +2314,23 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const MAX_CHAT_MESSAGES = 100
+  const STREAMING_ASSISTANT_PERSIST_INTERVAL_MS = 2400
+  let lastStreamingAssistantPersistAt = 0
+
+  function scheduleAssistantSessionPersist(mode: 'streaming' | 'final' = 'final'): void {
+    if (mode === 'streaming') {
+      const now = Date.now()
+      if (now - lastStreamingAssistantPersistAt < STREAMING_ASSISTANT_PERSIST_INTERVAL_MS) {
+        return
+      }
+      lastStreamingAssistantPersistAt = now
+      schedulePersist('autosave', { syncWorkspace: false })
+      return
+    }
+
+    lastStreamingAssistantPersistAt = Date.now()
+    schedulePersist('fast')
+  }
 
   function resolveSessionTitle(messages: ChatMessage[]): string {
     const firstUserMessage = messages.find((item) => item.role === 'user')?.content.trim()
@@ -2411,8 +2448,12 @@ export const useAppStore = defineStore('app', () => {
     return messageId
   }
 
-  function updateAssistantMessageContent(messageId: string, updater: (content: string) => string): void {
-    updateCurrentWorkspace((workspace) => syncActiveGlobalAssistantSession(workspace, (session) => {
+  function updateAssistantMessageContent(
+    messageId: string,
+    updater: (content: string) => string,
+    options: { persistMode?: 'streaming' | 'final' } = {}
+  ): void {
+    updateCurrentWorkspaceAssistantSession((workspace) => syncActiveGlobalAssistantSession(workspace, (session) => {
       const now = new Date().toISOString()
       const nextMessages = session.messages.map((item) => (
         item.id === messageId
@@ -2427,14 +2468,15 @@ export const useAppStore = defineStore('app', () => {
         updatedAt: now
       }
     }))
-    schedulePersist('fast')
+    scheduleAssistantSessionPersist(options.persistMode ?? 'streaming')
   }
 
   function updateAssistantMessageMeta(
     messageId: string,
-    updater: (message: ChatMessage) => ChatMessage
+    updater: (message: ChatMessage) => ChatMessage,
+    options: { persistMode?: 'streaming' | 'final' } = {}
   ): void {
-    updateCurrentWorkspace((workspace) => syncActiveGlobalAssistantSession(workspace, (session) => {
+    updateCurrentWorkspaceAssistantSession((workspace) => syncActiveGlobalAssistantSession(workspace, (session) => {
       const now = new Date().toISOString()
       const nextMessages = session.messages.map((item) => (
         item.id === messageId ? updater(item) : item
@@ -2447,7 +2489,7 @@ export const useAppStore = defineStore('app', () => {
         updatedAt: now
       }
     }))
-    schedulePersist('fast')
+    scheduleAssistantSessionPersist(options.persistMode ?? 'streaming')
   }
 
   function appendAssistantToolCall(messageId: string, toolCall: AssistantToolCall): void {
@@ -2536,7 +2578,7 @@ export const useAppStore = defineStore('app', () => {
             : item
         ))
       }))
-    }))
+    }), { persistMode: 'final' })
   }
 
   function updateAssistantSessionProposal(payload: {
@@ -2552,6 +2594,9 @@ export const useAppStore = defineStore('app', () => {
       updatedAt: new Date().toISOString()
     })))
     schedulePersist('fast')
+    if (payload.proposal !== undefined) {
+      void persistWorkspace()
+    }
   }
 
   function updateAssistantSessionOrchestrator(orchestrator: NovelOrchestratorSessionState | null): void {

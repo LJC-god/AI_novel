@@ -14,6 +14,7 @@ import {
 import { NButton, NPopover, NSelect, NTag, NTooltip } from 'naive-ui'
 import { useAppStore } from '@/stores/app'
 import { useGlobalAssistant } from '@/composables/useGlobalAssistant'
+import GlobalAssistantDiffReviewDialog from '@/components/GlobalAssistantDiffReviewDialog.vue'
 
 const props = defineProps<{
   activeViewLabel?: string
@@ -36,6 +37,9 @@ const {
   outlineTargetMap,
   messages,
   proposal,
+  proposalDiffFiles,
+  proposalDiffPatch,
+  proposalDiffStats,
   orchestratorState,
   hasWritableOrchestratorAssets,
   sessions,
@@ -68,6 +72,7 @@ const {
   applyWorldviewProposal,
   applyCharacterProposal,
   applyOutlineProposal,
+  applyProposalDiffFile,
   applyAllProposal,
   clearProposal,
   confirmOrchestratorPlan,
@@ -104,6 +109,7 @@ const conversationRef = ref<HTMLDivElement | null>(null)
 const inputHeight = ref(GLOBAL_ASSISTANT_INPUT_DEFAULT_HEIGHT)
 const isDraggingInput = ref(false)
 const showSessions = ref(false)
+const showDiffReview = ref(false)
 
 const maxInputHeight = computed(() =>
   Math.max(GLOBAL_ASSISTANT_INPUT_MIN_HEIGHT, Math.floor(window.innerHeight * GLOBAL_ASSISTANT_INPUT_MAX_VIEWPORT_RATIO))
@@ -140,6 +146,22 @@ function startInputResize(event: MouseEvent): void {
 
   document.addEventListener('mousemove', onMove)
   document.addEventListener('mouseup', onEnd)
+}
+
+function applyAllFromReview(): void {
+  applyAllProposal()
+  showDiffReview.value = false
+}
+
+function applyFileFromReview(fileId: string): void {
+  if (applyProposalDiffFile(fileId) && proposalDiffStats.value.total === 0) {
+    showDiffReview.value = false
+  }
+}
+
+function clearFromReview(): void {
+  clearProposal()
+  showDiffReview.value = false
 }
 
 function resetInputHeight(): void {
@@ -429,7 +451,7 @@ watch(
                   v-if="proposal && (proposal.constraintCreates.length || hasWorldviewApplyTarget() || hasCharacterApplyTarget() || hasOutlineApplyTarget())"
                   size="small"
                   type="primary"
-                  @click="applyAllProposal"
+                  @click="showDiffReview = true"
                 >
                   全部写回
                 </NButton>
@@ -440,7 +462,7 @@ watch(
               <section v-if="proposal.constraintCreates.length" class="global-proposal__section">
                 <div class="global-proposal__section-head">
                   <span>项目约束</span>
-                  <NButton size="tiny" tertiary @click="applyConstraintProposal">写回约束</NButton>
+                  <NButton size="tiny" tertiary @click="showDiffReview = true">审查 Diff</NButton>
                 </div>
                 <div class="global-proposal__items">
                   <div v-for="item in proposal.constraintCreates" :key="`gc-${item.title}`" class="global-proposal__item">
@@ -460,7 +482,7 @@ watch(
               <section v-if="proposal.worldviewCreates.length || proposal.worldviewUpdates.length" class="global-proposal__section">
                 <div class="global-proposal__section-head">
                   <span>世界观</span>
-                  <NButton size="tiny" tertiary :disabled="!hasWorldviewApplyTarget()" @click="applyWorldviewProposal">写回世界观</NButton>
+                  <NButton size="tiny" tertiary :disabled="!hasWorldviewApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton>
                 </div>
                 <div class="global-proposal__items">
                   <div v-for="item in proposal.worldviewCreates" :key="`wc-${item.title}`" class="global-proposal__item">
@@ -502,7 +524,7 @@ watch(
               <section v-if="proposal.characterCreates.length || proposal.characterUpdates.length" class="global-proposal__section">
                 <div class="global-proposal__section-head">
                   <span>人物卡</span>
-                  <NButton size="tiny" tertiary :disabled="!hasCharacterApplyTarget()" @click="applyCharacterProposal">写回人物</NButton>
+                  <NButton size="tiny" tertiary :disabled="!hasCharacterApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton>
                 </div>
                 <div class="global-proposal__items">
                   <div v-for="item in proposal.characterCreates" :key="`cc-${item.name}`" class="global-proposal__item">
@@ -550,7 +572,7 @@ watch(
               <section v-if="proposal.outlineCreates.length || proposal.outlineUpdates.length" class="global-proposal__section">
                 <div class="global-proposal__section-head">
                   <span>大纲</span>
-                  <NButton size="tiny" tertiary :disabled="!hasOutlineApplyTarget()" @click="applyOutlineProposal">写回大纲</NButton>
+                  <NButton size="tiny" tertiary :disabled="!hasOutlineApplyTarget()" @click="showDiffReview = true">审查 Diff</NButton>
                 </div>
                 <div class="global-proposal__items">
                   <div v-for="item in proposal.outlineCreates" :key="`oc-${item.title}`" class="global-proposal__item">
@@ -681,6 +703,18 @@ watch(
         </div>
       </div>
     </div>
+
+    <GlobalAssistantDiffReviewDialog
+      v-model:show="showDiffReview"
+      summary="全局助手写回审查"
+      :patch="proposalDiffPatch"
+      :files="proposalDiffFiles"
+      :stats="proposalDiffStats"
+      @apply-file="applyFileFromReview"
+      @apply-all="applyAllFromReview"
+      @regenerate="regenerateProposal"
+      @clear="clearFromReview"
+    />
   </aside>
 </template>
 

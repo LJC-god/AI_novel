@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { History, Plus, Sparkles, Trash2, X } from 'lucide-vue-next'
+import { GitCompare, History, Plus, Sparkles, Trash2, X } from 'lucide-vue-next'
 import { NTooltip, useMessage } from 'naive-ui'
 import ChapterAiMessages from './ChapterAiMessages.vue'
 import ChapterAiInput from './ChapterAiInput.vue'
 import ChapterFirstDraftDialog from './ChapterFirstDraftDialog.vue'
 import ChapterThreadDetectDialog from './ChapterThreadDetectDialog.vue'
+import GlobalAssistantDiffReviewDialog from '@/components/GlobalAssistantDiffReviewDialog.vue'
 import { useChapterAi } from './useChapterAi'
 import { useChapterFirstDraft } from './useChapterFirstDraft'
 import { useChapterThreadDetect } from './useChapterThreadDetect'
@@ -28,7 +29,7 @@ const showSessionList = ref(false)
 const showCommandPanel = ref(false)
 const showContextPanel = ref(false)
 
-const { messages, isResponding, agentStatus, hasSelection, selectedText, enabledContextModules, toggleContextModule, currentSessionId, sessions, send, stop, resetMessages, newSession, saveCurrentSession, loadSession, deleteSession, refreshSessions, applyToChapter, registerStreamListener: registerChatStream, unregisterStreamListener: unregisterChatStream } = useChapterAi()
+const { messages, isResponding, agentStatus, hasSelection, selectedText, enabledContextModules, toggleContextModule, currentSessionId, sessions, send, stop, resetMessages, newSession, saveCurrentSession, loadSession, deleteSession, refreshSessions, applyToChapter, registerStreamListener: registerChatStream, unregisterStreamListener: unregisterChatStream, showDiffReview, pendingEditProposals, proposalDiffFiles, proposalDiffPatch, proposalDiffStats, acceptEditProposal, acceptAllEditProposals, rejectEditProposal, clearEditProposals } = useChapterAi()
 
 const draft = useChapterFirstDraft()
 const detect = useChapterThreadDetect()
@@ -268,6 +269,13 @@ onBeforeUnmount(() => {
       <span>{{ agentStatus }}</span>
     </div>
 
+    <!-- 待审查编辑提示条 -->
+    <div v-if="pendingEditProposals.length > 0 && !showDiffReview" class="ai-pending-review-bar" @click="showDiffReview = true">
+      <GitCompare :size="13" />
+      <span>{{ pendingEditProposals.length }} 项编辑待审查</span>
+      <span class="ai-pending-review-action">点击查看</span>
+    </div>
+
     <!-- Composer 输入区 -->
     <ChapterAiInput
       :disabled="isResponding"
@@ -359,10 +367,48 @@ onBeforeUnmount(() => {
       @update:show="(v) => (detect.modalVisible.value = v)"
       @confirm="() => { const count = detect.confirmAdd(); if (count === 0) message.warning('请至少选择一条线索'); else message.success(`已添加 ${count} 条剧情线索`) }"
     />
+
+    <GlobalAssistantDiffReviewDialog
+      v-model:show="showDiffReview"
+      summary="AI 章节编辑审查"
+      :patch="proposalDiffPatch"
+      :files="proposalDiffFiles"
+      :stats="proposalDiffStats"
+      @apply-file="acceptEditProposal"
+      @apply-all="acceptAllEditProposals"
+      @regenerate="clearEditProposals"
+      @clear="clearEditProposals"
+    />
   </aside>
 </template>
 
 <style scoped>
+.ai-pending-review-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--arc-primary, #2563eb) 6%, var(--arc-bg-surface, #ffffff));
+  border: 1px solid color-mix(in srgb, var(--arc-primary, #2563eb) 20%, var(--arc-border, #e5e7eb));
+  color: var(--arc-primary, #2563eb);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ai-pending-review-bar:hover {
+  background: color-mix(in srgb, var(--arc-primary, #2563eb) 10%, var(--arc-bg-surface, #ffffff));
+}
+
+.ai-pending-review-action {
+  margin-left: auto;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
 .ai-panel {
   display: flex;
   flex-direction: column;

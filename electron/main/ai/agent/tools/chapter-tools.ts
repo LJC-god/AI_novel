@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto'
 import type { Tool } from './types'
 import {
   applyChapterEdit,
+  computeChapterEdit,
   listProjectChapters,
   readChapterFromDb,
   searchProjectData
@@ -8,11 +10,14 @@ import {
 
 export type ChapterToolCallbacks = {
   currentChapterId: string
+  useDiffReview?: boolean
   onEditApplied?: (chapterId: string, editType: string, preview: string, versionId: string) => void
+  onEditProposed?: (chapterId: string, proposalId: string, editType: string, preview: string, oldContent: string, newContent: string) => void
 }
 
 export function createChapterTools(callbacks: ChapterToolCallbacks): Tool[] {
-  const { currentChapterId, onEditApplied } = callbacks
+  const { currentChapterId, useDiffReview, onEditApplied, onEditProposed } = callbacks
+  const virtualContent = new Map<string, string>()
 
   const readChapter: Tool = {
     definition: {
@@ -122,6 +127,21 @@ export function createChapterTools(callbacks: ChapterToolCallbacks): Tool[] {
       }
 
       try {
+        if (useDiffReview && onEditProposed) {
+          const computed = await computeChapterEdit(ctx.projectId, currentChapterId, {
+            operation,
+            search,
+            content,
+            position
+          }, virtualContent.get(currentChapterId))
+
+          virtualContent.set(currentChapterId, computed.newContent)
+
+          const proposalId = randomUUID()
+          onEditProposed(currentChapterId, proposalId, operation, computed.preview, computed.oldContent, computed.newContent)
+          return { content: `Edit proposed for review: ${computed.preview}. The user must approve the diff before it is written.` }
+        }
+
         const result = await applyChapterEdit(ctx.projectId, currentChapterId, {
           operation,
           search,

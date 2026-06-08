@@ -208,7 +208,9 @@ export async function runStreamingAgentTask(
 
   const chapterTools = createChapterTools({
     currentChapterId: chapterId || '',
-    onEditApplied: handlers.onEditApplied
+    useDiffReview: routedTask.task === 'chapter-assistant' || routedTask.task === 'chapter-first-draft',
+    onEditApplied: handlers.onEditApplied,
+    onEditProposed: handlers.onEditProposed
   })
 
   const projectDataTools = createProjectDataTools()

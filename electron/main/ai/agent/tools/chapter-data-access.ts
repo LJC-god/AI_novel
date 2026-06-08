@@ -241,6 +241,101 @@ export async function applyChapterEdit(
   return { versionId, preview }
 }
 
+export async function computeChapterEdit(
+  projectId: string,
+  chapterId: string,
+  edit: ChapterEdit,
+  overrideContent?: string
+): Promise<{ oldContent: string; newContent: string; preview: string; chapterTitle: string }> {
+  const db = await ensureWorkspaceDb()
+
+  const row = db.prepare(
+    'SELECT id, title, content FROM chapters WHERE id = ? AND project_id = ?'
+  ).get(chapterId, projectId) as Record<string, unknown> | undefined
+
+  if (!row) {
+    throw new Error(`Chapter not found: ${chapterId}`)
+  }
+
+  const oldContent = overrideContent ?? String(row.content)
+  const chapterTitle = String(row.title)
+  const plainOld = stripHtmlTags(oldContent)
+
+  let newContent: string
+  let preview: string
+
+  if (edit.operation === 'append') {
+    const htmlToAppend = textToHtmlParagraphs(edit.content)
+    newContent = oldContent + htmlToAppend
+    preview = `Appended ${edit.content.length} chars`
+  } else if (edit.operation === 'replace') {
+    if (!edit.search) {
+      throw new Error('replace requires search')
+    }
+    const searchText = edit.search.trim()
+    if (!plainOld.includes(searchText)) {
+      throw new Error(`Could not find target text: "${searchText.slice(0, 50)}..."`)
+    }
+    newContent = replaceInHtml(oldContent, searchText, edit.content)
+    preview = `Replaced "${searchText.slice(0, 30)}..." -> "${edit.content.slice(0, 30)}..."`
+  } else if (edit.operation === 'insert') {
+    if (!edit.search && edit.position !== 'start' && edit.position !== 'end') {
+      throw new Error('insert requires search or start/end position')
+    }
+    const htmlToInsert = textToHtmlParagraphs(edit.content)
+    if (edit.position === 'start') {
+      newContent = htmlToInsert + oldContent
+    } else if (edit.position === 'end' || !edit.search) {
+      newContent = oldContent + htmlToInsert
+    } else {
+      newContent = insertInHtml(oldContent, edit.search, htmlToInsert, edit.position ?? 'after')
+    }
+    preview = `Inserted ${edit.content.length} chars`
+  } else {
+    throw new Error(`Unsupported operation: ${edit.operation}`)
+  }
+
+  return { oldContent, newContent, preview, chapterTitle }
+}
+
+export async function commitChapterEdit(
+  projectId: string,
+  chapterId: string,
+  oldContent: string,
+  newContent: string
+): Promise<{ versionId: string }> {
+  const db = await ensureWorkspaceDb()
+
+  const row = db.prepare(
+    'SELECT title, summary, status, word_target FROM chapters WHERE id = ? AND project_id = ?'
+  ).get(chapterId, projectId) as Record<string, unknown> | undefined
+
+  if (!row) {
+    throw new Error(`Chapter not found: ${chapterId}`)
+  }
+
+  const versionId = randomUUID()
+  db.prepare(`
+    INSERT INTO chapter_versions (id, project_id, chapter_id, title, summary, status, word_target, content, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    versionId,
+    projectId,
+    chapterId,
+    String(row.title),
+    String(row.summary),
+    String(row.status),
+    String(row.word_target),
+    oldContent,
+    new Date().toISOString()
+  )
+
+  db.prepare('UPDATE chapters SET content = ? WHERE id = ? AND project_id = ?')
+    .run(newContent, chapterId, projectId)
+
+  return { versionId }
+}
+
 export async function searchProjectData(
   projectId: string,
   query: string,

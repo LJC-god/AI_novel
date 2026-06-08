@@ -64,6 +64,16 @@ declare global {
         preview: string
         versionId: string
       }
+    | {
+        streamId: string
+        type: 'edit_proposed'
+        chapterId: string
+        proposalId: string
+        editType: string
+        preview: string
+        oldContent: string
+        newContent: string
+      }
 
   type CharacterArcReferenceImportPayload = {
     settings: import('@/types/app').AppSettings
@@ -204,6 +214,11 @@ declare global {
       readChapterVersionFromDb: (projectId: string, versionId: string) => Promise<{
         success: boolean
         result?: { id: string; chapterId: string; title: string; summary: string; status: string; wordTarget: string; content: string; createdAt: string }
+        error?: string
+      }>
+      commitChapterEdit: (payload: { projectId: string; chapterId: string; oldContent: string; newContent: string }) => Promise<{
+        success: boolean
+        versionId?: string
         error?: string
       }>
       onAiStreamEvent: (callback: (payload: CharacterArcAiStreamEvent) => void) => () => void
@@ -442,7 +457,16 @@ declare global {
         result?: { id: string; project_id: string; title: string; messages: unknown[]; created_at: string; updated_at: string }
         error?: string
       }>
-      saveSession: (payload: { id: string; projectId: string; title: string; messages: unknown[] }) => Promise<{
+      saveSession: (payload: {
+        id: string
+        projectId: string
+        title: string
+        messages: unknown[]
+        proposal?: unknown | null
+        lastProposalPrompt?: string
+        lastAssistantReply?: string
+        orchestrator?: unknown | null
+      }) => Promise<{
         success: boolean
         error?: string
       }>

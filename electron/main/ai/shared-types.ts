@@ -294,6 +294,8 @@ export type GlobalAssistantProposalResult = {
     title: string
     content: string
     scope: string
+    weight?: 'core' | 'important' | 'supporting'
+    locked?: boolean
     reason: string
     keywords: string[]
   }>
@@ -532,6 +534,7 @@ export type AiAgentStreamHandlers = {
   onToolResult: (toolUseId: string, toolName: string, content: string, isError: boolean, durationMs: number) => void
   onAgentStatus: (message: string, iteration: number, maxIterations: number) => void
   onEditApplied: (chapterId: string, editType: string, preview: string, versionId: string) => void
+  onEditProposed: (chapterId: string, proposalId: string, editType: string, preview: string, oldContent: string, newContent: string) => void
 }
 
 export const AI_REQUEST_TIMEOUT_MS = 180_000

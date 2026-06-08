@@ -26,6 +26,7 @@
     "@tiptap/vue-3": "^3.22.5",
     "ai": "^6.0.184",
     "cytoscape": "^3.33.3",
+    "diff2html": "^3.4.56",
     "docx": "^9.6.1",
     "dompurify": "^3.4.7",
     "highlight.js": "^11.11.1",
