@@ -77,6 +77,7 @@ declare global {
 
   type CharacterArcReferenceImportPayload = {
     settings: import('@/types/app').AppSettings
+    batchId?: string
     projectId?: string
     projectTitle?: string
     projectGenre?: string
@@ -104,6 +105,7 @@ declare global {
     total: number
     percent: number
     sourceTitle?: string
+    batchId?: string
     bookId?: string
     bookIndex?: number
     bookTotal?: number

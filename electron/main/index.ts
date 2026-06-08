@@ -47,6 +47,7 @@ type ReferenceImportProgressPayload = {
   total: number
   percent: number
   sourceTitle?: string
+  batchId?: string
   bookId?: string
   bookIndex?: number
   bookTotal?: number

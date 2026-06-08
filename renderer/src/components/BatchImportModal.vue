@@ -34,6 +34,7 @@ const pickedFiles = ref<PickedFile[]>([])
 const concurrency = ref(3)
 const books = reactive<Map<string, BookState>>(new Map())
 const batchFinished = ref(false)
+const activeBatchId = ref('')
 
 const totalSize = computed(() => pickedFiles.value.reduce((sum, f) => sum + f.size, 0))
 const totalSizeLabel = computed(() => {
@@ -96,9 +97,11 @@ onBeforeUnmount(stopTicker)
 // -- Progress listener --
 const cleanupProgress = window.characterArc.onReferenceImportProgress((payload) => {
   if (!payload.bookId) return
+  if (!activeBatchId.value || payload.batchId !== activeBatchId.value) return
   const existing = books.get(payload.bookId)
   const now = Date.now()
   if (existing) {
+    if (existing.status === 'canceled' && payload.status !== 'canceled') return
     existing.phase = payload.phase
     existing.message = payload.message
     existing.percent = payload.percent
@@ -153,6 +156,10 @@ function clearFiles() {
 
 let batchGeneration = 0
 
+function createBatchId(): string {
+  return `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
 async function startBatch() {
   if (pickedFiles.value.length === 0) return
   stage.value = 'running'
@@ -161,15 +168,18 @@ async function startBatch() {
   startTicker()
 
   const currentGen = ++batchGeneration
+  const batchId = createBatchId()
+  activeBatchId.value = batchId
   const filePaths = pickedFiles.value.map(f => f.filePath)
   const result = await window.characterArc.importReferenceNovelBatch(JSON.parse(JSON.stringify({
     settings: appStore.appSettings,
+    batchId,
     projectSkills: [],
     filePaths,
     concurrency: concurrency.value
   })))
 
-  if (currentGen !== batchGeneration) return
+  if (currentGen !== batchGeneration || activeBatchId.value !== batchId) return
 
   stopTicker()
   batchFinished.value = true
@@ -177,7 +187,8 @@ async function startBatch() {
 
   if (result.success && result.results) {
     for (const item of result.results) {
-      if (item.success && item.result) {
+      const book = books.get(item.bookId)
+      if (item.success && item.result && book?.status !== 'canceled') {
         appStore.upsertReferenceWork(item.result.referenceWork)
         appStore.mergeKnowledgeDocuments(item.result.knowledgeDocuments)
       }
@@ -199,6 +210,7 @@ function handleCancelBook(bookId: string) {
 }
 
 function handleCancelAll() {
+  batchGeneration++
   window.characterArc.cancelReferenceNovelBook()
   for (const book of books.values()) {
     if (book.status === 'running' || book.status === 'queued') {
@@ -223,6 +235,7 @@ function closeModal() {
   stage.value = 'picker'
   pickedFiles.value = []
   books.clear()
+  activeBatchId.value = ''
   emit('update:show', false)
   emit('done')
 }
@@ -233,6 +246,7 @@ function finishAndClose() {
   pickedFiles.value = []
   books.clear()
   batchFinished.value = false
+  activeBatchId.value = ''
   emit('update:show', false)
   emit('done')
 }

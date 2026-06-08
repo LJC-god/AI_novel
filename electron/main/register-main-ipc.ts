@@ -15,6 +15,7 @@ import type { WindowManager } from './window-manager'
 
 type ReferenceNovelImportRequest = {
   settings: AiTaskPayload['settings']
+  batchId?: string
   projectId?: string
   projectTitle?: string
   projectGenre?: string
@@ -36,6 +37,7 @@ type ReferenceImportProgressPayload = {
   total: number
   percent: number
   sourceTitle?: string
+  batchId?: string
   bookId?: string
   bookIndex?: number
   bookTotal?: number
@@ -45,7 +47,13 @@ type ReferenceImportProgressPayload = {
   chunkLabel?: string
 }
 
-let activeBatchBookControllers: Map<string, AbortController> | null = null
+type ActiveReferenceImportBatch = {
+  batchId: string
+  controller: AbortController
+  bookControllers: Map<string, AbortController>
+}
+
+let activeReferenceImportBatch: ActiveReferenceImportBatch | null = null
 
 function compareVersions(a: string, b: string): number {
   const pa = a.split('.').map(Number)
@@ -622,6 +630,9 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
 
     const request = (payload ?? {}) as ReferenceNovelImportRequest & { filePaths?: string[]; concurrency?: number }
     let filePaths = Array.isArray(request.filePaths) ? request.filePaths.filter((p): p is string => typeof p === 'string' && p.length > 0) : []
+    const batchId = typeof request.batchId === 'string' && request.batchId.trim()
+      ? request.batchId.trim()
+      : `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
     // 兼容旧调用：如果未提供 filePaths，则回退到弹原生对话框
     if (filePaths.length === 0) {
@@ -653,15 +664,22 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
 
     const results: BookResult[] = []
     let completedCount = 0
+    const queue = filePaths.map((fp, i) => ({
+      filePath: fp,
+      bookIndex: i + 1,
+      bookId: `book-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+      controller: new AbortController()
+    }))
+    const batchController = new AbortController()
+    const bookControllers = new Map(queue.map((item) => [item.bookId, item.controller]))
+    activeReferenceImportBatch?.controller.abort()
+    for (const ctl of activeReferenceImportBatch?.bookControllers.values() ?? []) {
+      ctl.abort()
+    }
+    activeReferenceImportBatch = { batchId, controller: batchController, bookControllers }
 
-    // 每本书一个 AbortController，支持单本停止
-    const bookControllers = new Map<string, AbortController>()
-    activeBatchBookControllers = bookControllers
-
-    async function processOneBook(filePath: string, bookIndex: number, bookId: string): Promise<BookResult> {
+    async function processOneBook(filePath: string, bookIndex: number, bookId: string, controller: AbortController): Promise<BookResult> {
       const fileName = basename(filePath)
-      const controller = new AbortController()
-      bookControllers.set(bookId, controller)
 
       const emit = (patch: Partial<ReferenceImportProgressPayload> & { phase: ReferenceImportProgressPayload['phase'] }) => {
         deps.emitReferenceImportProgress(window!, {
@@ -670,6 +688,7 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
           total: 1,
           percent: 0,
           sourceTitle: fileName,
+          batchId,
           bookId,
           bookIndex,
           bookTotal,
@@ -679,11 +698,11 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
       }
 
       try {
-        if (controller.signal.aborted) throw new Error('已取消')
+        if (batchController.signal.aborted || controller.signal.aborted) throw new Error('已取消')
 
         emit({ phase: 'extracting', message: '正在读取文件并提取基础信息…', percent: 5 })
         const localContext = await extractReferenceNovelContext(filePath)
-        if (controller.signal.aborted) throw new Error('已取消')
+        if (batchController.signal.aborted || controller.signal.aborted) throw new Error('已取消')
         const resolvedTitle = request.preferredTitle?.trim() || localContext.title
         const resolvedSource = request.preferredSource?.trim() || localContext.fileType.toUpperCase()
 
@@ -698,7 +717,7 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
         const chunkResults: Array<{ label: string; characterCount: number; result: ReferenceStyleChunkResult }> = []
         const chunkTotal = localContext.analysisChunks.length
         for (const [index, chunk] of localContext.analysisChunks.entries()) {
-          if (controller.signal.aborted) throw new Error('已取消')
+          if (batchController.signal.aborted || controller.signal.aborted) throw new Error('已取消')
           emit({
             phase: 'chunk-analysis',
             message: `分析分块 ${index + 1}/${chunkTotal}：${chunk.label}`,
@@ -729,11 +748,11 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
                 chunkKeywords: chunk.topKeywords,
                 chunkText: chunk.text
               }
-            })).result as ReferenceStyleChunkResult
+            }, undefined, controller.signal)).result as ReferenceStyleChunkResult
           })
         }
 
-        if (controller.signal.aborted) throw new Error('已取消')
+        if (batchController.signal.aborted || controller.signal.aborted) throw new Error('已取消')
         emit({
           phase: 'aggregating',
           message: '正在汇总所有分块结论…',
@@ -762,9 +781,9 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
             analysisSample: localContext.analysisSample,
             chunkSummaries: deps.formatReferenceChunkSummaries(chunkResults)
           }
-        })).result as ReferenceStyleAnalysisResult
+        }, undefined, controller.signal)).result as ReferenceStyleAnalysisResult
 
-        if (controller.signal.aborted) throw new Error('已取消')
+        if (batchController.signal.aborted || controller.signal.aborted) throw new Error('已取消')
         emit({
           phase: 'saving',
           message: '正在归档到知识库…',
@@ -838,7 +857,7 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
       } catch (error) {
         completedCount++
         const message = error instanceof Error ? error.message : '拆书失败'
-        const isCanceled = controller.signal.aborted || message.includes('已取消')
+        const isCanceled = batchController.signal.aborted || controller.signal.aborted || message.includes('已取消')
         emit({
           phase: 'done',
           message: isCanceled ? '已取消' : message,
@@ -856,12 +875,6 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
       }
     }
 
-    const queue = filePaths.map((fp, i) => ({
-      filePath: fp,
-      bookIndex: i + 1,
-      bookId: `book-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`
-    }))
-
     // 上报排队态，让前端可以一次性渲染所有书的初始卡片
     for (const item of queue) {
       deps.emitReferenceImportProgress(window!, {
@@ -871,6 +884,7 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
         total: 1,
         percent: 0,
         sourceTitle: basename(item.filePath),
+        batchId,
         bookId: item.bookId,
         bookIndex: item.bookIndex,
         bookTotal,
@@ -880,7 +894,29 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
 
     const executing = new Set<Promise<void>>()
     for (const item of queue) {
-      const p = processOneBook(item.filePath, item.bookIndex, item.bookId).then((r) => {
+      if (batchController.signal.aborted || item.controller.signal.aborted) {
+        results.push({
+          bookId: item.bookId,
+          success: false,
+          error: '已取消',
+          fileName: basename(item.filePath)
+        })
+        deps.emitReferenceImportProgress(window!, {
+          phase: 'done',
+          message: '已取消',
+          current: 0,
+          total: 1,
+          percent: 0,
+          sourceTitle: basename(item.filePath),
+          batchId,
+          bookId: item.bookId,
+          bookIndex: item.bookIndex,
+          bookTotal,
+          status: 'canceled'
+        })
+        continue
+      }
+      const p = processOneBook(item.filePath, item.bookIndex, item.bookId, item.controller).then((r) => {
         results.push(r)
       })
       const wrapped = p.then(() => { executing.delete(wrapped) })
@@ -891,7 +927,9 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
     }
     await Promise.all(executing)
 
-    activeBatchBookControllers = null
+    if (activeReferenceImportBatch?.batchId === batchId) {
+      activeReferenceImportBatch = null
+    }
 
     results.sort((a, b) => {
       const ai = queue.findIndex((q) => q.bookId === a.bookId)
@@ -904,15 +942,16 @@ export function registerMainIpcHandlers(deps: RegisterMainIpcHandlersDeps): void
 
   // ── 取消单本/全部批量拆书任务 ──
   ipcMain.handle('characterarc:cancel-reference-novel-book', async (_event, bookId: unknown) => {
-    if (!activeBatchBookControllers) return { success: false, error: '没有正在进行的批量任务' }
+    if (!activeReferenceImportBatch) return { success: false, error: '没有正在进行的批量任务' }
     if (typeof bookId === 'string' && bookId) {
-      const ctl = activeBatchBookControllers.get(bookId)
+      const ctl = activeReferenceImportBatch.bookControllers.get(bookId)
       if (!ctl) return { success: false, error: '未找到该任务' }
       ctl.abort()
       return { success: true }
     }
+    activeReferenceImportBatch.controller.abort()
     // 不传 bookId 则全部取消
-    for (const ctl of activeBatchBookControllers.values()) ctl.abort()
+    for (const ctl of activeReferenceImportBatch.bookControllers.values()) ctl.abort()
     return { success: true }
   })
 
