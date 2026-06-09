@@ -1,5 +1,5 @@
 import type { AppSettings } from '../shared-types'
-import { normalizeSettings } from '../settings'
+import { isZhipuV4BaseUrl, normalizeSettings } from '../settings'
 
 /** 从模型列表接口获取到的模型信息 */
 export interface FetchedModel {
@@ -9,6 +9,10 @@ export interface FetchedModel {
 
 /** 获取模型列表的超时时间（毫秒） */
 const FETCH_MODELS_TIMEOUT_MS = 15_000
+
+const ZHIPU_FALLBACK_MODELS: FetchedModel[] = [
+  { id: 'glm-5.1', ownedBy: 'zhipu' }
+]
 
 /** 已知的兼容性后缀路径，用于自动剥离后缀以找到真正的 /v1/models 端点 */
 const KNOWN_COMPAT_SUFFIXES = [
@@ -30,7 +34,12 @@ function buildModelsUrlCandidates(baseUrl: string): string[] {
   const trimmed = baseUrl.trim().replace(/\/+$/, '')
   if (!trimmed) return []
   const candidates: string[] = []
-  if (trimmed.endsWith('/v1')) {
+  if (isZhipuV4BaseUrl(trimmed)) {
+    candidates.push(`${trimmed}/models`)
+    if (trimmed.toLowerCase().includes('/api/coding/paas/v4')) {
+      candidates.push(`${trimmed.replace(/\/api\/coding\/paas\/v4$/i, '/api/paas/v4')}/models`)
+    }
+  } else if (trimmed.endsWith('/v1')) {
     candidates.push(`${trimmed}/models`)
   } else {
     candidates.push(`${trimmed}/v1/models`)
@@ -46,11 +55,19 @@ function buildModelsUrlCandidates(baseUrl: string): string[] {
   return [...new Set(candidates)]
 }
 
+function getFallbackModels(baseUrl: string): FetchedModel[] {
+  if (isZhipuV4BaseUrl(baseUrl)) return ZHIPU_FALLBACK_MODELS
+  return []
+}
+
 /** 通过 OpenAI 兼容接口获取模型列表，自动尝试多个候选 URL */
 async function fetchModelsOpenAiCompatible(baseUrl: string, apiKey: string): Promise<FetchedModel[]> {
-  const candidates = buildModelsUrlCandidates(baseUrl)
+  const trimmedBaseUrl = baseUrl.trim().replace(/\/+$/, '')
+  const candidates = buildModelsUrlCandidates(trimmedBaseUrl)
+  const fallbackModels = getFallbackModels(trimmedBaseUrl)
   if (candidates.length === 0) throw new Error('Base URL 为空，无法获取模型列表。')
   let lastError: string | null = null
+  let canUseFallback = false
   for (const url of candidates) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), FETCH_MODELS_TIMEOUT_MS)
@@ -60,20 +77,29 @@ async function fetchModelsOpenAiCompatible(baseUrl: string, apiKey: string): Pro
         headers: { ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
         signal: controller.signal
       })
-      if (response.status === 404 || response.status === 405) { lastError = `HTTP ${response.status}`; continue }
+      if (response.status === 404 || response.status === 405) {
+        lastError = `HTTP ${response.status}`
+        canUseFallback = true
+        continue
+      }
       if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`)
       const data = (await response.json()) as { data?: Array<{ id: string; owned_by?: string | null }> }
       const models = (data.data ?? []).map((m) => ({ id: m.id, ownedBy: m.owned_by ?? null }))
       models.sort((a, b) => a.id.localeCompare(b.id))
+      if (models.length === 0) {
+        lastError = 'empty model list'
+        canUseFallback = true
+        continue
+      }
       return models
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') throw new Error('获取模型列表超时，请检查网络或代理设置。')
-      if (lastError !== null) continue
       throw error
     } finally {
       clearTimeout(timer)
     }
   }
+  if (canUseFallback && fallbackModels.length > 0) return fallbackModels
   throw new Error(`所有候选端点均返回 ${lastError ?? '错误'}，该供应商可能未开放模型列表接口。`)
 }
 

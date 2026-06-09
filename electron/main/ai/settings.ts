@@ -11,11 +11,12 @@ export function resolveProviderDefaults(provider: ProviderName): { baseUrl: stri
   switch (provider) {
     case 'anthropic':
       return { baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-6' }
+    case 'zhipu':
+      return { baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4', model: 'glm-5.1' }
     case 'openai-compatible':
     case 'openai':
     case 'deepseek':
     case 'qwen':
-    case 'zhipu':
     case 'moonshot':
     case 'siliconflow':
     case 'ollama':
@@ -24,6 +25,26 @@ export function resolveProviderDefaults(provider: ProviderName): { baseUrl: stri
     default:
       return { baseUrl: '', model: '' }
   }
+}
+
+export function isZhipuV4BaseUrl(baseUrl: string): boolean {
+  const trimmed = baseUrl.trim()
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    if (url.hostname.toLowerCase() !== 'open.bigmodel.cn') return false
+    const path = url.pathname.replace(/\/+$/, '').toLowerCase()
+    return path === '/api/paas/v4' || path === '/api/coding/paas/v4'
+  } catch {
+    return false
+  }
+}
+
+function shouldAppendV1(provider: string, baseUrl: string): boolean {
+  if (!baseUrl || baseUrl.endsWith('/v1')) return false
+  if (provider === 'zhipu') return false
+  if (isZhipuV4BaseUrl(baseUrl)) return false
+  return true
 }
 
 /**
@@ -38,7 +59,7 @@ export function normalizeSettings(settings: AppSettings): AppSettings {
   let baseUrl = settings.baseUrl?.trim() || defaults.baseUrl
   if (baseUrl) {
     baseUrl = baseUrl.replace(/\/+$/, '')
-    if (!baseUrl.endsWith('/v1')) {
+    if (shouldAppendV1(provider, baseUrl)) {
       baseUrl = `${baseUrl}/v1`
     }
   }
