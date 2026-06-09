@@ -462,6 +462,7 @@ export function useGlobalAssistant(options: UseGlobalAssistantOptions = {}) {
   const activeSessionId = computed(() => appStore.activeGlobalAssistantSessionId ?? '')
   const assistantStatus = computed(() => {
     if (isRunningAudit.value) return '正在执行项目审计并整理修正提案…'
+    if (isSending.value && isOrchestratorMode.value) return '小说创作总控 Agent 正在生成阶段方案…'
     if (isSending.value) return '正在思考项目设定…'
     if (isProposalLoading.value) return '正在整理可写回提案…'
     return ''
@@ -1588,51 +1589,66 @@ export function useGlobalAssistant(options: UseGlobalAssistantOptions = {}) {
     appStore.pushUserMessage(prompt)
 
     if (isOrchestratorMode.value) {
+      const assistantMessageId = appStore.pushStreamingAssistantMessage()
+      appStore.updateAssistantMessageContent(
+        assistantMessageId,
+        () => '小说创作总控 Agent 正在整理阶段方案，请稍候…',
+        { persistMode: 'streaming' }
+      )
       isSending.value = true
       try {
         const route = inferOrchestratorRoute(prompt, orchestratorState.value)
-        const response = await window.characterArc.generateAi(toIpcPayload({
-          task: 'novel-orchestrator',
-          clientKey: ORCHESTRATOR_TASK_KEY,
-          clientTaskId: appStore.getClientTaskId(),
-          settings: appStore.appSettings,
-          context: {
-            projectId: project.id,
-            modelRole: route.modelRole,
-            projectTitle: project.title,
-            projectGenre: project.genre,
-            projectNovelLength: project.novelLength,
-            projectWordCount: project.wordCount,
-            projectPlatform: project.targetPlatform,
-            writingStylePrompt: project.writingStylePrompt,
-            orchestratorPhase: route.phase,
-            orchestratorModelRole: route.modelRole,
-            previousOrchestratorPhase: orchestratorState.value?.lastResult.phase ?? '',
-            previousOrchestratorStatus: orchestratorState.value?.status ?? '',
-            selectedInspirationTitle: orchestratorState.value?.selectedInspirationTitle ?? '',
-            userPrompt: prompt,
-            enabledContextModules: ['worldview', 'characters', 'organizations', 'relationships', 'outline', 'plotThreads', 'inspiration', 'knowledge', 'workflowDocuments', 'projectSkills'],
-            recentMessages: appStore.messages.slice(0, -1).slice(-8).map((item) => ({ role: item.role, content: item.content })),
-            referenceWorks: appStore.referenceWorks.slice(0, 8),
-            worldviewEntries: appStore.worldviewEntries.slice(0, 8),
-            characters: appStore.characters.slice(0, 8),
-            organizations: appStore.organizations.slice(0, 6),
-            characterRelationships: appStore.characterRelationships.slice(0, 8),
-            inspirationEntries: appStore.inspirationEntries.slice(0, 8),
-            outlineVolumes: appStore.outlineVolumes.slice(0, 6),
-            outlineItems: appStore.outlineItems.slice(0, 10),
-            plotThreads: appStore.plotThreads.slice(0, 8),
-            workflowDocuments: appStore.workflowDocuments.slice(0, 6).map((item) => ({ title: item.title, content: item.content.slice(0, 600) })),
-            projectSkills: project.projectSkills.filter((item) => item.enabled),
-            modelRoles: [
-              '拆书/审稿：强推理或长上下文模型',
-              '灵感池：快速低成本模型',
-              '大纲/设定：强推理模型',
-              '正文/润色：中文表达能力强的模型',
-              '结构化写入：JSON 稳定性高的模型'
-            ].join('\n')
-          }
-        }))
+        const response = await appStore.runTrackedAiTask(
+          {
+            key: ORCHESTRATOR_TASK_KEY,
+            kind: 'workflow',
+            label: '小说创作总控 Agent',
+            description: '正在生成阶段方案',
+            panel: 'assistant'
+          },
+          () => window.characterArc.generateAi(toIpcPayload({
+            task: 'novel-orchestrator',
+            clientKey: ORCHESTRATOR_TASK_KEY,
+            clientTaskId: appStore.getClientTaskId(),
+            settings: appStore.appSettings,
+            context: {
+              projectId: project.id,
+              modelRole: route.modelRole,
+              projectTitle: project.title,
+              projectGenre: project.genre,
+              projectNovelLength: project.novelLength,
+              projectWordCount: project.wordCount,
+              projectPlatform: project.targetPlatform,
+              writingStylePrompt: project.writingStylePrompt,
+              orchestratorPhase: route.phase,
+              orchestratorModelRole: route.modelRole,
+              previousOrchestratorPhase: orchestratorState.value?.lastResult.phase ?? '',
+              previousOrchestratorStatus: orchestratorState.value?.status ?? '',
+              selectedInspirationTitle: orchestratorState.value?.selectedInspirationTitle ?? '',
+              userPrompt: prompt,
+              enabledContextModules: ['worldview', 'characters', 'organizations', 'relationships', 'outline', 'plotThreads', 'inspiration', 'knowledge', 'workflowDocuments', 'projectSkills'],
+              recentMessages: appStore.messages.slice(0, -2).slice(-8).map((item) => ({ role: item.role, content: item.content })),
+              referenceWorks: appStore.referenceWorks.slice(0, 8),
+              worldviewEntries: appStore.worldviewEntries.slice(0, 8),
+              characters: appStore.characters.slice(0, 8),
+              organizations: appStore.organizations.slice(0, 6),
+              characterRelationships: appStore.characterRelationships.slice(0, 8),
+              inspirationEntries: appStore.inspirationEntries.slice(0, 8),
+              outlineVolumes: appStore.outlineVolumes.slice(0, 6),
+              outlineItems: appStore.outlineItems.slice(0, 10),
+              plotThreads: appStore.plotThreads.slice(0, 8),
+              workflowDocuments: appStore.workflowDocuments.slice(0, 6).map((item) => ({ title: item.title, content: item.content.slice(0, 600) })),
+              projectSkills: project.projectSkills.filter((item) => item.enabled),
+              modelRoles: [
+                '拆书/审稿：强推理或长上下文模型',
+                '灵感池：快速低成本模型',
+                '大纲/设定：强推理模型',
+                '正文/润色：中文表达能力强的模型',
+                '结构化写入：JSON 稳定性高的模型'
+              ].join('\n')
+            }
+          }))
+        )
         if (!response.success) {
           throw new Error(response.error ?? '小说总控生成失败')
         }
@@ -1643,10 +1659,10 @@ export function useGlobalAssistant(options: UseGlobalAssistantOptions = {}) {
           status: 'proposed',
           updatedAt: new Date().toISOString()
         })
-        appStore.pushAssistantMessage(content)
+        appStore.updateAssistantMessageContent(assistantMessageId, () => content, { persistMode: 'final' })
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : '小说总控请求失败'
-        appStore.pushAssistantMessage(`处理失败：${errorMessage}`)
+        appStore.updateAssistantMessageContent(assistantMessageId, () => `处理失败：${errorMessage}`, { persistMode: 'final' })
         message.error(errorMessage)
       } finally {
         isSending.value = false
@@ -1734,6 +1750,10 @@ export function useGlobalAssistant(options: UseGlobalAssistantOptions = {}) {
   }
 
   async function stopStreaming(): Promise<void> {
+    if (isOrchestratorMode.value && isSending.value) {
+      appStore.cancelAiTask(ORCHESTRATOR_TASK_KEY)
+      return
+    }
     if (!streamId) return
     await window.characterArc.stopAiStream(streamId)
   }

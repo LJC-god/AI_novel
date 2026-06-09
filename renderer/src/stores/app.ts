@@ -2768,6 +2768,9 @@ export const useAppStore = defineStore('app', () => {
 
     const run: AiTaskRun = {
       ...input,
+      onCancel: input.onCancel ?? (() => {
+        window.characterArc.cancelAiTask(clientTaskId).catch(() => {})
+      }),
       startedAt: Date.now(),
       stage: 'running'
     }
