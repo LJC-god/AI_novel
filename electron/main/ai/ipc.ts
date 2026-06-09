@@ -404,14 +404,13 @@ export function registerAiIpcHandlers(injectedDeps: AiIpcDeps): void {
     try {
       const request = payload as Partial<SpiralBootstrapInput>
       if (!request.settings) throw new Error('缺少 AI 设置。')
-      if (!request.projectPremise?.trim()) throw new Error('缺少小说简介。')
 
       const input: SpiralBootstrapInput = {
         settings: request.settings,
         projectTitle: request.projectTitle ?? '',
         projectGenre: request.projectGenre ?? '',
         projectNovelLength: request.projectNovelLength === 'short' ? 'short' : 'long',
-        projectPremise: request.projectPremise,
+        projectPremise: request.projectPremise ?? '',
         projectId: request.projectId,
         projectSkills: request.projectSkills
       }

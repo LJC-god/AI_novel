@@ -39,6 +39,7 @@ onMounted(() => window.addEventListener('resize', syncViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', syncViewport))
 
 type GenerationMode = 'off' | 'quick' | 'deep'
+const FALLBACK_PROJECT_TITLE = '待命名作品'
 
 const formData = reactive({
   title: '',
@@ -81,7 +82,12 @@ const selectedGenreLabel = computed(() =>
 )
 const novelLengthLabel = computed(() => resolveNovelLengthLabel(formData.novelLength))
 const currentStep = computed(() => steps[step.value - 1])
-const premisePreview = computed(() => formData.premise.trim() || '还未填写故事简介')
+const resolvedProjectTitle = computed(() => formData.title.trim() || FALLBACK_PROJECT_TITLE)
+const aiPremisePrompt = computed(() =>
+  `用户还没有确定书名和故事简介。请先根据题材「${resolvedGenre.value || DEFAULT_PROJECT_GENRE}」与篇幅「${novelLengthLabel.value}」发散一个可写的小说方向：给出鲜明主角、核心冲突、开篇钩子、长期追读动力和可持续扩展的世界/关系设定。不要依赖既有简介。`
+)
+const resolvedProjectPremise = computed(() => formData.premise.trim() || aiPremisePrompt.value)
+const premisePreview = computed(() => formData.premise.trim() || '暂不填写，让 AI 先按题材和篇幅发散故事方向')
 const creationModeLabel = computed(() => {
   if (formData.generationMode === 'deep') return '深度生成'
   if (formData.generationMode === 'quick') return '快速生成'
@@ -114,10 +120,7 @@ const footerHint = computed(() => {
 
 const canContinue = computed(() => {
   if (step.value === 1) {
-    return formData.title.trim().length > 0 && resolvedGenre.value.length > 0
-  }
-  if (step.value === 2) {
-    return formData.premise.trim().length > 0
+    return resolvedGenre.value.length > 0
   }
   return !isGenerating.value
 })
@@ -179,7 +182,7 @@ async function goNext(): Promise<void> {
   spiralPhase.value = 'idle'
 
   const wizardValues = {
-    title: formData.title,
+    title: resolvedProjectTitle.value,
     genre: resolvedGenre.value,
     novelLength: formData.novelLength,
     premise: formData.premise,
@@ -196,10 +199,10 @@ async function goNext(): Promise<void> {
         const result = await window.characterArc.spiralBootstrap(
           toIpcPayload({
             settings: appStore.appSettings,
-            projectTitle: formData.title,
+            projectTitle: resolvedProjectTitle.value,
             projectGenre: resolvedGenre.value,
             projectNovelLength: formData.novelLength,
-            projectPremise: formData.premise
+            projectPremise: resolvedProjectPremise.value
           })
         )
 
@@ -219,10 +222,10 @@ async function goNext(): Promise<void> {
           task: 'project-bootstrap',
           settings: appStore.appSettings,
           context: {
-            projectTitle: formData.title,
+            projectTitle: resolvedProjectTitle.value,
             projectGenre: resolvedGenre.value,
             projectNovelLength: formData.novelLength,
-            projectPremise: formData.premise
+            projectPremise: resolvedProjectPremise.value
           }
         })
       )
