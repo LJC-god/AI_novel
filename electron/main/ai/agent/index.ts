@@ -21,6 +21,7 @@ import { createKnowledgeTools } from './tools/knowledge-tools'
 import { createChapterTools } from './tools/chapter-tools'
 import { createProjectDataTools } from './tools/project-data-tools'
 import { buildAgentBehaviorRules, buildSkillIndex } from './system-prompt'
+import { resolveSettingsForModelRole } from '../model-roles'
 
 function stripSkillFrontmatter(content: string): string {
   const match = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/)
@@ -41,19 +42,20 @@ export async function runAgentTask(
   task: AiTaskPayload,
   knowledgeContext?: AiTaskKnowledgeContext
 ): Promise<AiTaskResponse> {
-  const settings = normalizeSettings(task.settings)
+  const settings = normalizeSettings(resolveSettingsForModelRole(task.settings, task.context.modelRole))
+  const routedTask: AiTaskPayload = { ...task, settings }
   validateSettings(settings)
   const startedAt = new Date().toISOString()
-  const chapterId = String(task.context.chapterId ?? '').trim() || undefined
+  const chapterId = String(routedTask.context.chapterId ?? '').trim() || undefined
 
-  const handler = getTaskHandler(task.task)
-  const { projectId, skills: candidateSkills, usedSkillIds } = await resolveTaskSkills(task)
-  logSelection(task.task, candidateSkills, knowledgeContext?.usedKnowledge ?? [])
-  await enrichTaskContextForGeneration(task, settings)
+  const handler = getTaskHandler(routedTask.task)
+  const { projectId, skills: candidateSkills, usedSkillIds } = await resolveTaskSkills(routedTask)
+  logSelection(routedTask.task, candidateSkills, knowledgeContext?.usedKnowledge ?? [])
+  await enrichTaskContextForGeneration(routedTask, settings)
 
-  const input = buildPromptInput(task, candidateSkills, knowledgeContext)
+  const input = buildPromptInput(routedTask, candidateSkills, knowledgeContext)
   const prompt = handler.buildPrompt(input)
-  const maxTokens = handler.resolveMaxTokens?.(input) ?? resolveMaxTokens(task)
+  const maxTokens = handler.resolveMaxTokens?.(input) ?? resolveMaxTokens(routedTask)
 
   const candidateSkillDefs = candidateSkills
     .map((sel) => getSkillById(sel.id, projectId || undefined))
@@ -69,7 +71,7 @@ export async function runAgentTask(
       }).join('\n\n')}`
     : ''
 
-  const globalAssistantRules = task.task === 'global-assistant' || task.task === 'global-assistant-proposal'
+  const globalAssistantRules = routedTask.task === 'global-assistant' || routedTask.task === 'global-assistant-proposal'
     ? [
         '',
         '## Global Assistant Agent Rules',
@@ -93,7 +95,7 @@ export async function runAgentTask(
   })
 
   const producedKnowledgeDocuments: AiKnowledgeDocumentDraft[] = []
-  const referenceTitle = String(task.context.referenceTitle ?? task.context.sourceTitle ?? '').trim()
+  const referenceTitle = String(routedTask.context.referenceTitle ?? routedTask.context.sourceTitle ?? '').trim()
   const knowledgeTools = createKnowledgeTools({
     collectDocument: (doc) => producedKnowledgeDocuments.push(doc),
     defaultSourceLabel: referenceTitle || 'agent'
@@ -110,7 +112,7 @@ export async function runAgentTask(
   const tools = [...skillTools, ...knowledgeTools, ...chapterTools, ...projectDataTools]
   const controller = new AbortController()
 
-  logPrompt('AGENT_REQUEST', settings, { system: systemPrompt, user: prompt.user }, task.task, usedSkillIds)
+  logPrompt('AGENT_REQUEST', settings, { system: systemPrompt, user: prompt.user }, routedTask.task, usedSkillIds)
   const requestStartedAt = Date.now()
   let totalUsage: AiRunUsage | undefined
 
@@ -125,7 +127,7 @@ export async function runAgentTask(
       maxTokens
     })
     totalUsage = addAiRunUsage(totalUsage, loopResult.usage)
-    logResponse('AGENT_REQUEST', settings, task.task, loopResult.finalText, Date.now() - requestStartedAt, { usedSkills: usedSkillIds })
+    logResponse('AGENT_REQUEST', settings, routedTask.task, loopResult.finalText, Date.now() - requestStartedAt, { usedSkills: usedSkillIds })
 
     let rawText = loopResult.finalText
     let result = handler.normalize(rawText)
@@ -133,12 +135,12 @@ export async function runAgentTask(
 
     if (handler.outputType === 'json' && !handler.validate(result)) {
       const repairPromptPair = buildRepairPrompt(prompt.system, prompt.user, rawText)
-      logPrompt('AGENT_REPAIR', settings, repairPromptPair, task.task, usedSkillIds)
+      logPrompt('AGENT_REPAIR', settings, repairPromptPair, routedTask.task, usedSkillIds)
       const repairStartedAt = Date.now()
       const repairResult = await aiGenerateTextWithUsage(settings, repairPromptPair, maxTokens)
       totalUsage = addAiRunUsage(totalUsage, repairResult.usage)
       rawText = repairResult.text
-      logResponse('AGENT_REPAIR', settings, task.task, rawText, Date.now() - repairStartedAt, { usedSkills: usedSkillIds })
+      logResponse('AGENT_REPAIR', settings, routedTask.task, rawText, Date.now() - repairStartedAt, { usedSkills: usedSkillIds })
       result = handler.normalize(rawText)
       repairTriggered = true
 
@@ -149,7 +151,7 @@ export async function runAgentTask(
 
     const finishedAt = new Date().toISOString()
     const meta = buildRunMeta(
-      task.task, projectId, chapterId, settings, 'success',
+      routedTask.task, projectId, chapterId, settings, 'success',
       startedAt, finishedAt,
       totalUsage,
       knowledgeContext?.usedKnowledge ?? [], usedSkillIds,
@@ -165,9 +167,9 @@ export async function runAgentTask(
   } catch (error) {
     const finishedAt = new Date().toISOString()
     const message = error instanceof Error ? error.message : 'AI 调用失败'
-    logError('AGENT_REQUEST', settings, task.task, error, Date.now() - requestStartedAt, { usedSkills: usedSkillIds })
+    logError('AGENT_REQUEST', settings, routedTask.task, error, Date.now() - requestStartedAt, { usedSkills: usedSkillIds })
     const meta = buildRunMeta(
-      task.task, projectId, chapterId, settings, 'error',
+      routedTask.task, projectId, chapterId, settings, 'error',
       startedAt, finishedAt,
       totalUsage,
       knowledgeContext?.usedKnowledge ?? [], usedSkillIds,

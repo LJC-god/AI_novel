@@ -226,6 +226,9 @@ function toolReadStats(run: AiRunRecord): { reads: number; hits: number } {
               <span class="ai-log-card__run-id">#{{ run.id.slice(-6) }}</span>
             </div>
             <span>{{ run.provider }} / {{ run.model }}</span>
+            <span v-if="run.modelGroupName || run.modelRoleLabel" class="ai-log-card__route">
+              {{ run.modelGroupName || '默认模型组' }} · {{ run.modelRoleLabel || run.modelRoleId || '未标注岗位' }}
+            </span>
           </div>
           <n-tag size="small" :type="statusMeta[run.status]?.type || 'default'" :bordered="false">
             {{ statusMeta[run.status]?.label || run.status }}
@@ -457,6 +460,11 @@ function toolReadStats(run: AiRunRecord): { reads: number; hits: number } {
   color: var(--arc-text-hint);
   font-size: 12px;
   word-break: break-all;
+}
+
+.ai-log-card__route {
+  color: var(--arc-text-secondary) !important;
+  font-weight: 600;
 }
 
 .ai-log-card__run-id {

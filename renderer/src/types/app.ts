@@ -620,6 +620,14 @@ export interface AiRunRecord {
   provider: string
   /** 模型名称 */
   model: string
+  /** 本次调用所属模型组 ID */
+  modelGroupId?: string
+  /** 本次调用所属模型组名称 */
+  modelGroupName?: string
+  /** 本次调用使用的协作角色 ID */
+  modelRoleId?: string
+  /** 本次调用使用的协作角色名称 */
+  modelRoleLabel?: string
   /** 运行状态 */
   status: AiRunStatus
   /** 开始时间 */
@@ -837,6 +845,16 @@ export type ModelRoleId =
 
 export type ModelRoleProfileMap = Partial<Record<ModelRoleId, string>>
 
+export interface ModelRoleGroup {
+  id: string
+  name: string
+  description: string
+  roleProfileMap: ModelRoleProfileMap
+  roleNotes?: Partial<Record<ModelRoleId, string>>
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AppSettings {
   /** AI 供应商标识 */
   provider: string
@@ -852,6 +870,10 @@ export interface AppSettings {
   activeAiProfileId: string
   /** 多模型协作：角色到 AI profile 的映射；为空时回退当前激活模型 */
   modelRoleProfileMap: ModelRoleProfileMap
+  /** 多模型协作组：一套可复用的小说生产流水线角色绑定 */
+  modelGroups: ModelRoleGroup[]
+  /** 当前启用的模型组 ID；为空时回退 modelRoleProfileMap */
+  activeModelGroupId: string
   /** 图片服务预设标识 */
   imageProvider: string
   /** 图片生成模型名称 */

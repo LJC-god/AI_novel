@@ -1,4 +1,5 @@
 import type { ReferenceStyleMetric } from './referenceAnalysis'
+import { normalizeModelGroups, type ModelRoleGroup } from './ai/model-groups'
 
 export type KnowledgeDocumentSourceType =
   | 'reference-summary'
@@ -66,6 +67,10 @@ export type WorkspaceAiRunRecord = {
   task: string
   provider: string
   model: string
+  modelGroupId?: string
+  modelGroupName?: string
+  modelRoleId?: string
+  modelRoleLabel?: string
   status: WorkspaceAiRunStatus
   startedAt: string
   finishedAt?: string
@@ -323,6 +328,8 @@ export type WorkspacePayload = {
     }>
     activeAiProfileId: string
     modelRoleProfileMap?: Record<string, string>
+    modelGroups?: ModelRoleGroup[]
+    activeModelGroupId?: string
     imageProvider: string
     imageModel: string
     imageApiKey: string
@@ -456,34 +463,36 @@ export function normalizeAppSettings(
     settings?.uiScale !== undefined && Number.isFinite(settings.uiScale)
       ? Math.min(1.75, Math.max(0.75, settings.uiScale))
       : 1
+  const aiProfiles = Array.isArray(settings?.aiProfiles)
+    ? settings.aiProfiles
+        .filter((item): item is NonNullable<typeof settings.aiProfiles>[number] => !!item && typeof item === 'object')
+        .map((item) => ({
+          id: String(item.id ?? '').trim(),
+          name: String(item.name ?? '').trim(),
+          provider: String(item.provider ?? '').trim(),
+          baseUrl: String(item.baseUrl ?? '').trim(),
+          apiKey: String(item.apiKey ?? '').trim(),
+          model: String(item.model ?? '').trim()
+        }))
+        .filter((item) => item.id)
+    : []
+  const normalizedGroups = normalizeModelGroups(
+    settings?.modelGroups,
+    settings?.modelRoleProfileMap,
+    aiProfiles,
+    typeof settings?.activeModelGroupId === 'string' ? settings.activeModelGroupId : ''
+  )
 
   return {
     provider: settings?.provider || 'openai-compatible',
     model: settings?.model || '',
     apiKey: settings?.apiKey || '',
     baseUrl: settings?.baseUrl || '',
-    aiProfiles: Array.isArray(settings?.aiProfiles)
-      ? settings.aiProfiles
-          .filter((item): item is NonNullable<typeof settings.aiProfiles>[number] => !!item && typeof item === 'object')
-          .map((item) => ({
-            id: String(item.id ?? '').trim(),
-            name: String(item.name ?? '').trim(),
-            provider: String(item.provider ?? '').trim(),
-            baseUrl: String(item.baseUrl ?? '').trim(),
-            apiKey: String(item.apiKey ?? '').trim(),
-            model: String(item.model ?? '').trim()
-          }))
-          .filter((item) => item.id)
-      : [],
+    aiProfiles,
     activeAiProfileId: typeof settings?.activeAiProfileId === 'string' ? settings.activeAiProfileId : '',
-    modelRoleProfileMap:
-      settings?.modelRoleProfileMap && typeof settings.modelRoleProfileMap === 'object'
-        ? Object.fromEntries(
-            Object.entries(settings.modelRoleProfileMap)
-              .map(([role, profileId]) => [role, String(profileId ?? '').trim()])
-              .filter(([, profileId]) => profileId)
-          )
-        : {},
+    modelRoleProfileMap: normalizedGroups.modelRoleProfileMap,
+    modelGroups: normalizedGroups.modelGroups,
+    activeModelGroupId: normalizedGroups.activeModelGroupId,
     imageProvider: settings?.imageProvider || '',
     imageModel: settings?.imageModel || '',
     imageApiKey: settings?.imageApiKey || '',

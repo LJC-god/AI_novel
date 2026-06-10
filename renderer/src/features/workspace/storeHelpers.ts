@@ -2,6 +2,7 @@ import { toRaw } from 'vue'
 import { createDefaultWorkflowDocuments, normalizeWorkflowDocuments } from '@/features/novelWorkflow/documents'
 import { createDefaultNovelWorkflowStages, normalizeNovelWorkflowStages } from '@/features/novelWorkflow/stages'
 import { DEFAULT_CHAPTER_WORD_TARGET, normalizeChapterWordTarget } from '@/features/chapters/wordTarget'
+import { normalizeModelGroups } from '@/features/settings/modelGroups'
 import { createOutlineVolume as createWorkspaceVolume } from '@/features/workspace/outlineVolumes'
 import { createDemoWorkspace, normalizeWorkspace } from '@/features/workspace/projectWorkspace'
 import type {
@@ -235,6 +236,8 @@ export const defaultAppSettings: AppSettings = {
   aiProfiles: [],
   activeAiProfileId: '',
   modelRoleProfileMap: {},
+  modelGroups: [],
+  activeModelGroupId: '',
   imageProvider: '',
   imageModel: '',
   imageApiKey: '',
@@ -350,6 +353,12 @@ export function normalizeAppSettings(settings?: Partial<AppSettings> | null): Ap
           .filter(([, profileId]) => profileId && aiProfiles.some((profile) => profile.id === profileId))
       )
     : {}
+  const normalizedGroups = normalizeModelGroups(
+    source.modelGroups,
+    modelRoleProfileMap,
+    aiProfiles,
+    sanitizeSettingString(source.activeModelGroupId, '')
+  )
 
   return {
     provider,
@@ -358,7 +367,9 @@ export function normalizeAppSettings(settings?: Partial<AppSettings> | null): Ap
     baseUrl,
     aiProfiles,
     activeAiProfileId,
-    modelRoleProfileMap,
+    modelRoleProfileMap: normalizedGroups.modelRoleProfileMap,
+    modelGroups: normalizedGroups.modelGroups,
+    activeModelGroupId: normalizedGroups.activeModelGroupId,
     imageProvider: sanitizeSettingString(source.imageProvider, defaultAppSettings.imageProvider),
     imageModel: sanitizeSettingString(source.imageModel, defaultAppSettings.imageModel),
     imageApiKey: sanitizeSettingString(source.imageApiKey, defaultAppSettings.imageApiKey),

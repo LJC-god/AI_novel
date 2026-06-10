@@ -5,10 +5,11 @@ import { NButton, NFormItem, NInput, NModal, NSelect, NSwitch, useMessage } from
 import { autoSaveOptions } from '@/features/settings/autoSave'
 import { getProviderPreset, providerOptions, resolveProviderDefaults } from '@/features/settings/providerPresets'
 import { imageProviderOptions, resolveImageProviderDefaults } from '@/features/settings/imageProviderPresets'
+import { MODEL_ROLE_OPTIONS } from '@/features/settings/modelGroups'
 import { useAppStore } from '@/stores/app'
 import { darkModePresets, themePresets } from '@/theme/presets'
 import { toIpcPayload } from '@/utils/ipcPayload'
-import type { AiProfile, AppSettings, DarkModeStyle, ModelRoleId, ThemeName } from '@/types/app'
+import type { AiProfile, AppSettings, DarkModeStyle, ModelRoleGroup, ModelRoleId, ThemeName } from '@/types/app'
 
 const props = defineProps<{
   show: boolean
@@ -43,16 +44,7 @@ const aiTimeoutOptions = [
   { label: '300 秒', value: 300 },
   { label: '600 秒', value: 600 }
 ]
-const modelRoleOptions: Array<{ id: ModelRoleId; label: string; hint: string }> = [
-  { id: 'orchestrator', label: '总控调度', hint: '拆书、立项、阶段推进与确认问题' },
-  { id: 'deconstruct', label: '拆书分析', hint: '参考作品结构、爽点、节奏和卖点提取' },
-  { id: 'inspiration', label: '灵感池', hint: '题材方向、设定钩子和商业化变体' },
-  { id: 'outline', label: '大纲规划', hint: '总大纲、卷大纲和章纲结构' },
-  { id: 'assets', label: '设定资产', hint: '世界观、角色、人际关系和伏笔' },
-  { id: 'draft', label: '正文起草', hint: '章节正文与场景推进' },
-  { id: 'polish', label: '润色审校', hint: '语言优化、节奏修复和一致性检查' },
-  { id: 'json', label: '结构化输出', hint: '稳定 JSON 与写入项目的数据草稿' }
-]
+const modelRoleOptions = MODEL_ROLE_OPTIONS
 
 const draftSettings = reactive<AppSettings>({
   provider: '',
@@ -62,6 +54,8 @@ const draftSettings = reactive<AppSettings>({
   aiProfiles: [],
   activeAiProfileId: '',
   modelRoleProfileMap: {},
+  modelGroups: [],
+  activeModelGroupId: '',
   imageProvider: '',
   imageModel: '',
   imageApiKey: '',
@@ -124,10 +118,21 @@ const profileSelectOptions = computed(() =>
     value: profile.id
   }))
 )
+const modelGroupSelectOptions = computed(() =>
+  draftSettings.modelGroups.map((group) => ({
+    label: group.name,
+    value: group.id
+  }))
+)
+const activeModelGroup = computed<ModelRoleGroup | undefined>(() =>
+  draftSettings.modelGroups.find((group) => group.id === draftSettings.activeModelGroupId)
+)
 const hasPendingChanges = computed(() =>
   draftTheme.value !== appStore.theme
   || JSON.stringify(draftSettings.aiProfiles) !== JSON.stringify(appStore.appSettings.aiProfiles)
   || JSON.stringify(draftSettings.modelRoleProfileMap) !== JSON.stringify(appStore.appSettings.modelRoleProfileMap)
+  || JSON.stringify(draftSettings.modelGroups) !== JSON.stringify(appStore.appSettings.modelGroups)
+  || draftSettings.activeModelGroupId !== appStore.appSettings.activeModelGroupId
   || draftSettings.imageProvider !== appStore.appSettings.imageProvider
   || draftSettings.imageModel !== appStore.appSettings.imageModel
   || draftSettings.imageApiKey !== appStore.appSettings.imageApiKey
@@ -147,6 +152,12 @@ function syncDraftFromStore(): void {
   draftSettings.aiProfiles = appStore.appSettings.aiProfiles.map((profile) => ({ ...profile }))
   draftSettings.activeAiProfileId = appStore.appSettings.activeAiProfileId
   draftSettings.modelRoleProfileMap = { ...appStore.appSettings.modelRoleProfileMap }
+  draftSettings.modelGroups = appStore.appSettings.modelGroups.map((group) => ({
+    ...group,
+    roleProfileMap: { ...group.roleProfileMap },
+    roleNotes: { ...(group.roleNotes ?? {}) }
+  }))
+  draftSettings.activeModelGroupId = appStore.appSettings.activeModelGroupId
   draftSettings.imageProvider = appStore.appSettings.imageProvider
   draftSettings.imageModel = appStore.appSettings.imageModel
   draftSettings.imageApiKey = appStore.appSettings.imageApiKey
@@ -242,11 +253,37 @@ function handleDeleteProfile(): void {
       delete draftSettings.modelRoleProfileMap[role.id]
     }
   }
+  draftSettings.modelGroups = draftSettings.modelGroups.map((group) => {
+    const nextMap = { ...group.roleProfileMap }
+    for (const role of modelRoleOptions) {
+      if (nextMap[role.id] === removingId) {
+        delete nextMap[role.id]
+      }
+    }
+    return { ...group, roleProfileMap: nextMap, updatedAt: new Date().toISOString() }
+  })
   editingProfileId.value = draftSettings.activeAiProfileId || draftSettings.aiProfiles[0]?.id || ''
   fetchedModels.value = []
 }
 
 function updateModelRoleProfile(role: ModelRoleId, profileId: string | null): void {
+  const group = activeModelGroup.value
+  if (group) {
+    const nextMap = { ...group.roleProfileMap }
+    if (profileId) {
+      nextMap[role] = profileId
+    } else {
+      delete nextMap[role]
+    }
+    draftSettings.modelGroups = draftSettings.modelGroups.map((item) =>
+      item.id === group.id
+        ? { ...item, roleProfileMap: nextMap, updatedAt: new Date().toISOString() }
+        : item
+    )
+    draftSettings.modelRoleProfileMap = { ...nextMap }
+    return
+  }
+
   if (profileId) {
     draftSettings.modelRoleProfileMap = {
       ...draftSettings.modelRoleProfileMap,
@@ -257,6 +294,13 @@ function updateModelRoleProfile(role: ModelRoleId, profileId: string | null): vo
   const nextMap = { ...draftSettings.modelRoleProfileMap }
   delete nextMap[role]
   draftSettings.modelRoleProfileMap = nextMap
+}
+
+function handleActiveModelGroupChange(groupId: string | null): void {
+  const nextId = groupId || draftSettings.modelGroups[0]?.id || ''
+  draftSettings.activeModelGroupId = nextId
+  const group = draftSettings.modelGroups.find((item) => item.id === nextId)
+  draftSettings.modelRoleProfileMap = group ? { ...group.roleProfileMap } : { ...draftSettings.modelRoleProfileMap }
 }
 
 function updateEditingProfile(updates: Partial<AiProfile>): void {
@@ -360,7 +404,15 @@ async function handleTestAiConnection(): Promise<void> {
 async function saveSettings(): Promise<void> {
   appStore.updateAppSetting('aiProfiles', draftSettings.aiProfiles.map((profile) => ({ ...profile })))
   appStore.updateAppSetting('activeAiProfileId', draftSettings.activeAiProfileId)
-  appStore.updateAppSetting('modelRoleProfileMap', { ...draftSettings.modelRoleProfileMap })
+  const selectedGroup = activeModelGroup.value
+  const roleMap = selectedGroup ? { ...selectedGroup.roleProfileMap } : { ...draftSettings.modelRoleProfileMap }
+  appStore.updateAppSetting('modelGroups', draftSettings.modelGroups.map((group) => ({
+    ...group,
+    roleProfileMap: { ...group.roleProfileMap },
+    roleNotes: { ...(group.roleNotes ?? {}) }
+  })))
+  appStore.updateAppSetting('activeModelGroupId', draftSettings.activeModelGroupId)
+  appStore.updateAppSetting('modelRoleProfileMap', roleMap)
 
   const activeProfile = draftSettings.aiProfiles.find(p => p.id === draftSettings.activeAiProfileId)
   if (activeProfile) {
@@ -545,19 +597,30 @@ async function saveSettings(): Promise<void> {
 
           <div class="role-router">
             <div class="role-router__head">
-              <strong>多模型协作角色</strong>
-              <span>留空时使用标题栏当前模型；配置后，总控 Agent 会按角色切换到对应接口。</span>
+              <strong>模型组协作角色</strong>
+              <span>模型组是一套小说生产流水线配置；AI 调用日志会记录本次使用的组、岗位和具体模型。</span>
+            </div>
+            <div class="model-group-field">
+              <n-form-item label="当前模型组">
+                <n-select
+                  :options="modelGroupSelectOptions"
+                  :value="draftSettings.activeModelGroupId || null"
+                  placeholder="选择模型组"
+                  @update:value="(value) => handleActiveModelGroupChange(value ? String(value) : null)"
+                />
+              </n-form-item>
+              <p v-if="activeModelGroup?.description">{{ activeModelGroup.description }}</p>
             </div>
             <div class="role-router__grid">
               <div v-for="role in modelRoleOptions" :key="role.id" class="role-router__row">
                 <div class="role-router__copy">
                   <strong>{{ role.label }}</strong>
-                  <span>{{ role.hint }}</span>
+                  <span>{{ activeModelGroup?.roleNotes?.[role.id] || role.hint }}</span>
                 </div>
                 <n-select
                   class="role-router__select"
                   :options="profileSelectOptions"
-                  :value="draftSettings.modelRoleProfileMap[role.id] || null"
+                  :value="activeModelGroup?.roleProfileMap?.[role.id] || draftSettings.modelRoleProfileMap[role.id] || null"
                   clearable
                   placeholder="使用当前模型"
                   @update:value="(value) => updateModelRoleProfile(role.id, value ? String(value) : null)"

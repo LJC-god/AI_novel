@@ -38,6 +38,16 @@ export type AppSettings = {
   }>
   activeAiProfileId?: string
   modelRoleProfileMap?: Record<string, string>
+  modelGroups?: Array<{
+    id: string
+    name: string
+    description: string
+    roleProfileMap: Record<string, string>
+    roleNotes?: Record<string, string>
+    createdAt: string
+    updatedAt: string
+  }>
+  activeModelGroupId?: string
   /** 可选：embedding 专用模型，为空时从 model 推断 */
   embeddingModel: string
   /** 可选：图片生成模型 */
@@ -48,6 +58,10 @@ export type AppSettings = {
   imageBaseUrl: string
   /** AI 请求超时（秒），默认 180 */
   aiTimeoutSeconds?: number
+  modelGroupId?: string
+  modelGroupName?: string
+  modelRoleId?: string
+  modelRoleLabel?: string
 }
 
 /** 所有 AI 任务类型的联合字面量类型。每个值对应 tasks/ 下的一个 TaskHandler。 */
@@ -120,6 +134,10 @@ export type AiRunMeta = {
   clientKey?: string
   provider: string
   model: string
+  modelGroupId?: string
+  modelGroupName?: string
+  modelRoleId?: string
+  modelRoleLabel?: string
   status: 'running' | 'success' | 'error' | 'canceled'
   startedAt: string
   finishedAt?: string
