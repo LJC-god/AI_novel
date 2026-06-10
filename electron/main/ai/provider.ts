@@ -2,6 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { LanguageModel } from 'ai'
 import type { AppSettings } from './shared-types'
+import { isZhipuV4BaseUrl } from './settings'
 
 const ANTHROPIC_PROMPT_CACHE = {
   type: 'ephemeral' as const,
@@ -30,13 +31,42 @@ function isOllamaProvider(settings: AppSettings): boolean {
   return settings.provider === 'ollama'
 }
 
+function isZhipuProvider(settings: AppSettings): boolean {
+  return settings.provider === 'zhipu' || isZhipuV4BaseUrl(settings.baseUrl)
+}
+
+async function zhipuFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === 'string'
+    ? input
+    : input instanceof URL
+      ? input.toString()
+      : input.url
+  const method = String(init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase()
+  const body = init?.body
+
+  if (method === 'POST' && url.includes('/chat/completions') && typeof body === 'string') {
+    try {
+      const payload = JSON.parse(body) as Record<string, unknown>
+      if (!payload.thinking) {
+        payload.thinking = { type: 'disabled' }
+      }
+      return fetch(input, { ...init, body: JSON.stringify(payload) })
+    } catch {
+      return fetch(input, init)
+    }
+  }
+
+  return fetch(input, init)
+}
+
 function createOpenAICompatibleProvider(settings: AppSettings) {
   const apiKey = settings.apiKey.trim()
 
   return createOpenAI({
     apiKey: apiKey || undefined,
     baseURL: settings.baseUrl || undefined,
-    name: isOllamaProvider(settings) ? 'ollama' : undefined
+    name: isOllamaProvider(settings) ? 'ollama' : isZhipuProvider(settings) ? 'zhipu' : undefined,
+    fetch: isZhipuProvider(settings) ? zhipuFetch : undefined
   })
 }
 
@@ -76,6 +106,7 @@ export function buildSystemPrompt(settings: AppSettings, systemPrompt: string) {
 export function providerSupportsTools(settings: AppSettings): boolean {
   if (settings.provider === 'anthropic') return isClaudeModel(settings)
   if (isDeepSeekProvider(settings)) return false
+  if (isZhipuProvider(settings)) return false
   if (isOllamaProvider(settings)) return false
   return true
 }
