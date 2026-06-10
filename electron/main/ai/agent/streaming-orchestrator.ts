@@ -76,8 +76,8 @@ export async function runStreamingAgentTask(
     input.skillsBlock = '（skills 已通过工具按需加载，参见 system prompt 中的索引）'
   }
   const prompt = handler.buildPrompt(input)
-  const baseMaxTokens = handler.resolveMaxTokens?.(input) ?? resolveMaxTokens(routedTask) ?? 4096
-  const maxTokens = Math.max(baseMaxTokens, 4096)
+  const baseMaxTokens = handler.resolveMaxTokens?.(input) ?? resolveMaxTokens(routedTask) ?? 8192
+  const maxTokens = Math.max(baseMaxTokens, 8192)
 
   const candidateSkillDefs = candidateSkills
     .map((sel) => getSkillById(sel.id, projectId || undefined))

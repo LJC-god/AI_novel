@@ -93,7 +93,7 @@ ${sourceText || '（未提供原文文本——请告诉用户需要先提供参
     return typeof (result as ChapterAssistantResult).content === 'string'
   },
   resolveMaxTokens(): number {
-    return 8000
+    return 12000
   }
 }
 export default handler

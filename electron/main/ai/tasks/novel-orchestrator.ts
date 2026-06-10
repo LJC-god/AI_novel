@@ -261,7 +261,7 @@ ${SEQUENTIAL_DRAFT_POLICY}
     return Boolean(r.phase && r.phaseLabel && r.summary && r.recommendedNextAction)
   },
   resolveMaxTokens(): number {
-    return 2600
+    return 6000
   }
 }
 

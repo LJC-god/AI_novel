@@ -27,7 +27,7 @@ const handler: TaskHandler = {
     return (result as ChapterScenePlanResult).scenes.length >= 2
   },
   resolveMaxTokens(): number {
-    return 400
+    return 1200
   }
 }
 export default handler

@@ -204,7 +204,7 @@ ${String(context.userPrompt ?? '')}
     return Boolean((result as GlobalAssistantResult).content?.trim())
   },
   resolveMaxTokens(): number {
-    return 2400
+    return 5000
   }
 }
 

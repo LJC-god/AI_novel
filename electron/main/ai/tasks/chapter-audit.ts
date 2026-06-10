@@ -85,7 +85,7 @@ pass 判定：所有 critical issue 数 == 0 且 warning issue 数 <= 2 即 pass
     return Boolean((result as ChapterAuditResult).audit)
   },
   resolveMaxTokens(): number {
-    return 2000
+    return 4000
   }
 }
 

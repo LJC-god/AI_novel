@@ -129,7 +129,7 @@ export function validateSettings(settings: AppSettings): void {
 export function resolveMaxTokens(task?: AiTaskPayload): number | undefined {
   switch (task?.task) {
     case 'project-bootstrap':
-      return 1500
+      return 4000
     case 'chapter-analysis':
     case 'reference-style-chunk':
     case 'reference-style-analysis':
@@ -138,30 +138,30 @@ export function resolveMaxTokens(task?: AiTaskPayload): number | undefined {
     case 'outline-batch':
     case 'outline-chain':
     case 'workflow-documents':
-      return 1200
-    case 'chapter-scene-plan':
-      return 400
-    case 'chapter-first-draft':
       return 4000
+    case 'chapter-scene-plan':
+      return 1200
+    case 'chapter-first-draft':
+      return 8000
     case 'global-assistant':
-      return 1400
+      return 5000
     case 'global-assistant-proposal':
-      return 1800
+      return 7000
     case 'novel-orchestrator':
-      return 2600
+      return 6000
     case 'chapter-assistant':
       switch (String(task.context.responseLength ?? 'medium')) {
         case 'short':
-          return 500
+          return 1200
         case 'long':
-          return 1400
+          return 6000
         default:
-          return 900
+          return 3000
       }
     case 'worldview-entry':
     case 'character-card':
     case 'outline-item':
-      return 700
+      return 2500
     default:
       return undefined
   }

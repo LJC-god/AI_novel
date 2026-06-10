@@ -46,7 +46,7 @@ const handler: TaskHandler = {
     } as ReferenceStyleAnalysisResult
   },
   resolveMaxTokens(): number {
-    return 2200
+    return 4000
   },
   validate(result: AiTaskResult): boolean {
     const r = result as ReferenceStyleAnalysisResult

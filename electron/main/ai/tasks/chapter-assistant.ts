@@ -102,9 +102,9 @@ const handler: TaskHandler = {
   },
   resolveMaxTokens(input: PromptBuildInput): number {
     switch (String(input.context.responseLength ?? 'medium')) {
-      case 'short': return 500
-      case 'long': return 1400
-      default: return 900
+      case 'short': return 1200
+      case 'long': return 6000
+      default: return 3000
     }
   }
 }

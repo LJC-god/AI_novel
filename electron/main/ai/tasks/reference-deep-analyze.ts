@@ -103,7 +103,7 @@ ${skillsBlock || '（参考 system prompt 顶部的 skill 索引）'}
   },
   resolveMaxTokens(): number {
     // 给 agent 多轮工具调用足够预算——每轮一个工具调用 + 一段总结，整个 loop 可能跑 10K+ token
-    return 8000
+    return 12000
   }
 }
 export default handler

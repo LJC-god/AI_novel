@@ -265,7 +265,7 @@ ${String(context.userPrompt ?? '')}
     return errors
   },
   resolveMaxTokens(): number {
-    return 3200
+    return 7000
   }
 }
 

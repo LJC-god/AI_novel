@@ -48,7 +48,7 @@ const handler: TaskHandler = {
     return Boolean((result as ChapterAssistantResult).content?.trim())
   },
   resolveMaxTokens(): number {
-    return 4000
+    return 8000
   }
 }
 export default handler

@@ -24,8 +24,8 @@ function formatProjectConstraints(source: unknown): string {
 }
 
 const TOKEN_PER_CHAR_GENEROUS = 0.8
-const MAX_TOKENS_FLOOR = 4000
-const MAX_TOKENS_CEIL = 8000
+const MAX_TOKENS_FLOOR = 8000
+const MAX_TOKENS_CEIL = 20000
 const SEQUENTIAL_CHAPTER_DRAFT_RULE = `
 
 【质量优先单章规则】
@@ -150,7 +150,7 @@ const handler: TaskHandler = {
   resolveMaxTokens(input: PromptBuildInput): number {
     const target = resolveTargetWords(input.context)
     if (target <= 0) return MAX_TOKENS_FLOOR
-    const cap = Math.ceil(target * 1.5 / TOKEN_PER_CHAR_GENEROUS)
+    const cap = Math.ceil(target * 2.2 / TOKEN_PER_CHAR_GENEROUS)
     return Math.min(Math.max(cap, MAX_TOKENS_FLOOR), MAX_TOKENS_CEIL)
   }
 }
