@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1120"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="930" cy="250" r="210" fill="#22c55e" opacity="0.24"/>
+  <circle cx="220" cy="1240" r="280" fill="#22c55e" opacity="0.18"/>
+  <path d="M120 1130 C290 970, 410 1030, 570 850 C720 680, 860 690, 1080 500" fill="none" stroke="#22c55e" stroke-width="18" opacity="0.55" filter="url(#glow)"/>
+  <rect x="130" y="230" width="940" height="1120" rx="34" fill="#000" opacity="0.22" stroke="#e0f2fe" stroke-opacity="0.18"/>
+  <text x="600" y="185" text-anchor="middle" font-size="54" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#e0f2fe" opacity="0.92">东方玄幻</text>
+  <text x="600" y="440" text-anchor="middle" font-size="94" font-weight="800" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#e0f2fe">
+    杀敌爆经验，但经验先发给敌人
+  </text>
+  <g transform="translate(600 910)">
+    <circle r="170" fill="#22c55e" opacity="0.22"/>
+    <path d="M-95 170 L-55 -80 Q0 -165 55 -80 L95 170 Z" fill="#e0f2fe" opacity="0.92"/>
+    <circle cx="0" cy="-95" r="58" fill="#e0f2fe" opacity="0.95"/>
+    <path d="M-170 35 Q0 130 170 35" fill="none" stroke="#22c55e" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <text x="600" y="1280" text-anchor="middle" font-size="42" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#e0f2fe" opacity="0.85">主角 秦昼</text>
+  <text x="600" y="1350" text-anchor="middle" font-size="34" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#e0f2fe" opacity="0.72">每一场越级战都是三层布局和清楚结算</text>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#facc15"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="930" cy="250" r="210" fill="#facc15" opacity="0.24"/>
+  <circle cx="220" cy="1240" r="280" fill="#facc15" opacity="0.18"/>
+  <path d="M120 1130 C290 970, 410 1030, 570 850 C720 680, 860 690, 1080 500" fill="none" stroke="#facc15" stroke-width="18" opacity="0.55" filter="url(#glow)"/>
+  <rect x="130" y="230" width="940" height="1120" rx="34" fill="#000" opacity="0.22" stroke="#f8fafc" stroke-opacity="0.18"/>
+  <text x="600" y="185" text-anchor="middle" font-size="54" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#f8fafc" opacity="0.92">东方仙侠</text>
+  <text x="600" y="440" text-anchor="middle" font-size="94" font-weight="800" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#f8fafc">
+    我在仙门做账，算哭了三界大能
+  </text>
+  <g transform="translate(600 910)">
+    <circle r="170" fill="#facc15" opacity="0.22"/>
+    <path d="M-95 170 L-55 -80 Q0 -165 55 -80 L95 170 Z" fill="#f8fafc" opacity="0.92"/>
+    <circle cx="0" cy="-95" r="58" fill="#f8fafc" opacity="0.95"/>
+    <path d="M-170 35 Q0 130 170 35" fill="none" stroke="#facc15" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <text x="600" y="1280" text-anchor="middle" font-size="42" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#f8fafc" opacity="0.85">主角 白砚辞</text>
+  <text x="600" y="1350" text-anchor="middle" font-size="34" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#f8fafc" opacity="0.72">用账本破案，用因果追债，算哭三界大能</text>
+</svg>
