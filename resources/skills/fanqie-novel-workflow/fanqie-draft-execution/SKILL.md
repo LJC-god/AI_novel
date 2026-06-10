@@ -28,12 +28,14 @@ Write usable chapter prose for Fanqie-style serialized fiction.
 
 ## Execution Rules
 
+0. Draft exactly one active chapter per run. Never generate multiple chapters, the next chapter, or parallel chapter prose in the same response.
 1. Start in action, pressure, dialogue, or consequence.
 2. Use short paragraphs and clear scene movement.
 3. Explain setting only when it changes a decision, risk, or payoff.
 4. Show intelligence through clue, tactic, evidence, and consequence.
 5. Keep the protagonist under pressure even after a small win.
 6. End with a concrete next-click hook.
+7. After drafting this chapter, send it through audit, consistency repair, and polish before drafting the next chapter.
 
 ## Anti-Patterns
 
@@ -43,5 +45,7 @@ Write usable chapter prose for Fanqie-style serialized fiction.
 - Ending chapters with mood only.
 
 ## Output Contract
+
+For `chapter-first-draft`, output only the active chapter prose.
 
 Unless asked otherwise, output only正文. No Markdown heading.

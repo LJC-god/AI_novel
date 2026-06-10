@@ -60,8 +60,9 @@ The following skills are the new workflow decomposition. They are intentionally 
 6. Generate story assets: worldbuilding, characters, relationships, foreshadowing, constraints.
 7. Generate volume/chapter outline, starting with the first volume when requested.
 8. User confirms chapter plan.
-9. Draft chapters.
-10. Audit, repair, polish, and continue.
+9. Draft the active chapter only.
+10. Audit, repair, and polish the active chapter.
+11. Continue to the next chapter only after the previous chapter passes review.
 
 ## Model Roles
 
@@ -72,7 +73,6 @@ The platform setting `modelRoleProfileMap` can route each stage to a different A
 - `inspiration`: fast idea generation.
 - `outline`: premise, master outline, volume outline, and chapter outline.
 - `assets`: worldbuilding, characters, relationships, and ledgers.
-- `draft`: chapter prose generation.
+- `draft`: sequential single-chapter prose generation.
 - `polish`: audit, repair, polish, and humanization.
 - `json`: stable structured output when needed.
-

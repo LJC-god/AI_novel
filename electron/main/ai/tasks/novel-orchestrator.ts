@@ -26,6 +26,9 @@ const PHASE_LABELS: Record<NovelOrchestratorPhase, string> = {
   audit: '审稿修复'
 }
 
+const SEQUENTIAL_DRAFT_POLICY = `
+正文执行规则：章纲、卷纲可以批量规划，但 draft 阶段必须质量优先、单章顺序执行。禁止把多章正文并行分配给多个模型生成；每次只推进当前章节：本章起草 -> 审稿/一致性检查 -> 必要修复 -> 用户确认或进入下一章。`
+
 function normalizePhase(value: unknown): NovelOrchestratorPhase {
   const candidate = String(value ?? '').trim() as NovelOrchestratorPhase
   return PHASES.includes(candidate) ? candidate : 'inspiration'
@@ -128,6 +131,8 @@ ${truncate(skillsBlock, 2200) || '暂无'}
 多模型协作偏好：
 ${modelRoles}
 
+${SEQUENTIAL_DRAFT_POLICY}
+
 阶段定义：
 - deconstruct：拆书、扫榜、参考分析
 - inspiration：生成可选灵感池，等待用户选择类型/长短篇/字数/平台
@@ -136,7 +141,7 @@ ${modelRoles}
 - story-assets：总大纲确认后，生成世界观、角色、人物关系、伏笔台账等结构资产
 - volume-outline：细化某一卷目标、冲突链和阶段高潮
 - chapter-outline：生成某一卷的章大纲
-- draft：按章大纲开始正文
+- draft：按章大纲开始正文，但只允许单章顺序执行，不允许并行生成多章正文
 - audit：审稿、修复、一致性检查
 
 决策规则：
@@ -151,7 +156,8 @@ ${modelRoles}
 8. 如果当前阶段是总大纲/卷大纲，outlinePlan 和 volumeDrafts 都要给出。
 9. 如果当前阶段是结构资产，worldviewDrafts、characterDrafts、assetPlan 都要给出。
 10. 如果当前阶段是第一卷章大纲，chapterOutlineDrafts 必须给出 8-20 条。
-11. 你可以说明本次已由“本次执行模型角色”处理；不要假装已经并行调用其他模型。modelRoles 字段用于给出后续阶段的分工建议。
+11. 如果当前阶段是 draft，recommendedNextAction 和 nextPrompts 必须指向“生成当前章节 -> 审稿修复 -> 再进入下一章”的单章流程；不要提出一次写多章或多模型并行跑多章。
+12. 你可以说明本次已由“本次执行模型角色”处理；不要假装已经并行调用其他模型。modelRoles 字段用于给出后续阶段的分工建议。
 
 返回 JSON 字段：
 {

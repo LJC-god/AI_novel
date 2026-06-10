@@ -37,15 +37,18 @@ Write chapter prose from the active outline, chapter plan, project facts, and se
 ## Workflow
 
 1. Preserve hard context: established facts, names, relationships, timeline, current chapter summary, and word target.
-2. Execute the chapter job before adding texture.
-3. Keep every scene tied to a conflict, discovery, choice, or emotional shift.
-4. Maintain character agency. Avoid solving problems through coincidence unless the project already supports it.
-5. End with a changed situation: payoff, reversal, sharper question, or emotional residue.
-6. If asked to continue existing text, match the immediate paragraph rhythm and do not restart the scene.
+2. Execute exactly one active chapter per drafting run. Do not generate multiple chapters, the next chapter, or parallel chapter prose.
+3. Execute the chapter job before adding texture.
+4. Keep every scene tied to a conflict, discovery, choice, or emotional shift.
+5. Maintain character agency. Avoid solving problems through coincidence unless the project already supports it.
+6. End with a changed situation: payoff, reversal, sharper question, or emotional residue.
+7. If asked to continue existing text, match the immediate paragraph rhythm and do not restart the scene.
+8. After the chapter is drafted, route it to audit, consistency repair, and polish before drafting the next chapter.
 
 ## Output
 
 For text tasks, output only usable chapter content unless the task explicitly asks for analysis.
+For `chapter-first-draft`, output only the active chapter prose, not process notes or another chapter.
 
 Use [draft-execution-rules.md](references/draft-execution-rules.md) for execution checks.
 

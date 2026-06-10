@@ -42,7 +42,7 @@ export function createDefaultModelGroup(roleProfileMap: ModelRoleProfileMap = {}
       inspiration: '脑洞扩展、题材变体、反套路点子',
       outline: '总大纲、卷纲、章纲与冲突链',
       assets: '世界观、角色、人际关系、伏笔账本',
-      draft: '章节正文批量起草',
+      draft: '章节正文单章起草，审稿修复后再续章',
       polish: '去 AI 味、番茄节奏修复、一致性审稿',
       json: '稳定结构化输出与写入草稿'
     },
@@ -107,4 +107,3 @@ export function normalizeModelGroups(
     modelRoleProfileMap: activeGroup?.roleProfileMap ?? fallbackRoleMap
   }
 }
-

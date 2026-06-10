@@ -2,8 +2,8 @@
 name: story-chapter-exec
 version: 1.0.0
 description: |
-  章节批量执行写作。基于融合创作指南+世界状态+细纲，批量生成严格符合风格指纹的章节正文，
-  并输出状态增量包（角色/伏笔/关系/环境变更）+下批次细纲，支持循环调用。
+  章节计划与单章执行写作。基于融合创作指南+世界状态+细纲，顺序生成严格符合风格指纹的当前章节正文，
+  并输出状态增量包（角色/伏笔/关系/环境变更）+后续细纲，支持审稿修复后循环调用。
 manifest:
   category: writing
   tasks:
@@ -14,7 +14,7 @@ manifest:
   triggers:
     - 写正文
     - 写章节
-    - 批量写作
+    - 单章写作
     - 续写
     - 执行写作
     - 章节生成
@@ -22,7 +22,7 @@ manifest:
   required: false
   enabled: true
   compatibility: native
-  compatibilityNote: 基于融合指南+世界状态+细纲批量生成章节正文，输出续写包支持循环调用。
+  compatibilityNote: 基于融合指南+世界状态+细纲生成当前章节正文，输出续写包支持审稿修复后循环调用。
   references:
     - file: references/exec-constraints.md
       loadWhen:
@@ -32,7 +32,7 @@ manifest:
         task: chapter-first-draft
 ---
 
-# 章节批量执行写作系统
+# 章节计划与单章执行写作系统
 
 ## 核心任务
 
@@ -45,25 +45,19 @@ manifest:
 - **文风参考** — 前序章节样本（仅首批可无）
 
 你的输出：
-- 第X-Y章正文（完全符合风格指纹的小说文本）
-- 续写包（状态更新+下批次细纲，供循环调用）
+- 当前章节正文（完全符合风格指纹的小说文本）
+- 续写包（状态更新+后续细纲，供审稿修复后循环调用）
 
 ## 输出结构
 
 ### 第一部分：章节正文
 
-纯Markdown文本，章节间用单独一行 `---` 分隔。
+纯Markdown文本，只包含当前章节正文，不要继续下一章，不要用 `---` 分隔多章。
 
 ```markdown
 # 第X章 章节标题
 
 [正文内容]
-
----
-
-# 第X+1章 章节标题
-
-[下一章内容]
 ```
 
 ### 第二部分：续写包 (continuation_pack)
@@ -71,10 +65,10 @@ manifest:
 纯YAML，直接以 `continuation_pack:` 根键开始。
 
 包含：
-- **batch_metadata**: 完成章节、总字数、进度百分比
+- **batch_metadata**: 完成的当前章节、字数、进度百分比
 - **state_delta**: 角色状态变更、关系网络变更、伏笔动态、谜题状态、环境变化
 - **quality_report**: 合规验证、伏笔执行、节奏评估、主题连贯性
-- **next_batch_blueprint**: 下批次章节的详细细纲（beat级）
+- **next_batch_blueprint**: 后续章节的详细细纲（beat级），供审稿修复通过后再调用
 
 ## 强制合规规则
 

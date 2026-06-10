@@ -26,6 +26,13 @@ function formatProjectConstraints(source: unknown): string {
 const TOKEN_PER_CHAR_GENEROUS = 0.8
 const MAX_TOKENS_FLOOR = 4000
 const MAX_TOKENS_CEIL = 8000
+const SEQUENTIAL_CHAPTER_DRAFT_RULE = `
+
+【质量优先单章规则】
+- 正文起草阶段禁止并行生成多章。一次 AI 调用只能处理当前章节的完整正文。
+- 不得同时起草下一章、批量生成多章正文、跨章续写，或在正文里输出“下一章/第N+1章”的内容。
+- 即使补充要求里要求一次写多章，本任务也只写当前章节。
+- 本章完成后必须进入审稿、一致性检查和必要修复，再进入下一章；正文输出里不要写流程说明。`
 
 function resolveTargetWords(context: Record<string, unknown>): number {
   const raw = Number(context.targetWordCount ?? context.chapterWordTarget ?? 0)
@@ -110,7 +117,7 @@ const handler: TaskHandler = {
     const endingsTrailBlock = formatRecentEndingsTrail(context.recentEndingsTrail)
 
     return {
-      system: `${capabilityPreamble.system}\n\n你是 CharacterArc 的章节初稿生成器。任务：基于项目设定、章节信息和上方已经规划好的写作备忘，一次性流式输出本章完整正文。
+      system: `${capabilityPreamble.system}\n\n你是 CharacterArc 的章节初稿生成器。任务：基于项目设定、章节信息和上方已经规划好的写作备忘，一次性流式输出本章完整正文。${SEQUENTIAL_CHAPTER_DRAFT_RULE}
 
 【任务边界】
 - 这是"章节初稿生成"，不是润色，不是续写建议，不是分析。
