@@ -71,6 +71,8 @@ docs/*
 !docs/upstream-v1.9-analysis.md
 !docs/assets/
 !docs/release-notes/
+!docs/topic-pools/
+!docs/topic-pools/**
 prototype/
 
 # Optional Python helpers / notebooks

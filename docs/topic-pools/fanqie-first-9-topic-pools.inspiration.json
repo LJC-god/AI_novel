@@ -1,0 +1,113 @@
+{
+  "app": "CharacterArc",
+  "schemaVersion": "2.0",
+  "moduleType": "inspiration",
+  "compatibilityNote": "2.x export files can be imported by the current CharacterArc version. This package contains the first 9 Fanqie-facing topic pools as inspiration entries.",
+  "exportedAt": "2026-06-10T00:00:00.000Z",
+  "data": {
+    "project": {
+      "title": "番茄第一批9个选题池"
+    },
+    "inspirationEntries": [
+      {
+        "id": "topic-pool-fanqie-001",
+        "type": "选题池",
+        "title": "都市高武：我靠扣寿命把武学氪成负数",
+        "content": "类型：都市高武 / 老六极道流\n篇幅：长篇，120-180万字\n平台：番茄男频\n核心钩子：主角被诬陷成废人，觉醒“寿命抵扣系统”，别人氪命变强，他发现系统可以把敌人的违规代价算进自己的账户，越被针对越赚钱。\n前三章开法：开局模拟考主角筋脉崩坏，被班主任要求退考；反派当众递来赔偿协议；主角签字后把协议条款反向触发，第一拳打出“欠费武学”。\n可持续爽点：寿命账单、武考打脸、校队资源争夺、武馆黑幕、城市秘境、敌方组织违规套利。\n老六笑点：主角每次开打前先问“开发票吗”，把战斗打成财务审计。\n风险修正：氪命容易压抑；每次代价都转成可见收益和敌人反噬，不写苦大仇深。\n推荐模型组：GLM 5.1出脑洞，DeepSeek V4做大纲和正文，Claude Sonnet 4.6审核战力体系。\n推荐skills：novel-market-scan, fanqie-premise-positioning, novel-pleasure-points, novel-chapter-draft。",
+        "tags": ["番茄", "都市", "都市高武", "长篇", "老六", "极道流", "强爽点"],
+        "source": "manual",
+        "sortOrder": 0,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-002",
+        "type": "选题池",
+        "title": "都市脑洞：反诈主播，专骗骗子修仙",
+        "content": "类型：都市脑洞 / 直播 / 轻喜剧\n篇幅：中长篇，80-120万字\n平台：番茄男频\n核心钩子：主角是底层反诈主播，意外绑定“谎言灵气系统”：只要骗子相信他的假身份，就会掉落技能和线索。\n前三章开法：开局直播连线杀猪盘，对方冒充仙门客服；主角顺着演成“监察仙君”，反手骗出整个诈骗窝点的组织图。\n可持续爽点：直播围观、骗子反被骗、都市奇人、地下灰产、超凡身份误会升级。\n老六笑点：主角一本正经给骗子讲“修仙反诈法”，弹幕以为剧本，警方以为卧底。\n风险修正：现实诈骗题材可能沉重；只取骗局结构，不写真实受害细节，用喜剧反杀承接。\n推荐模型组：GPT-5.5控制边界，GLM 5.1做直播梗，DeepSeek V4搭主线。\n推荐skills：novel-premise-design, novel-emotion-pacing, fanqie-golden-three, novel-audit-repair。",
+        "tags": ["番茄", "都市", "都市脑洞", "直播", "中长篇", "老六", "轻喜剧"],
+        "source": "manual",
+        "sortOrder": 1,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-003",
+        "type": "选题池",
+        "title": "都市重生：我重生后只想摆摊，前世仇人全来加盟",
+        "content": "类型：都市重生 / 小生意逆袭 / 群像喜剧\n篇幅：长篇，100-150万字\n平台：番茄男频\n核心钩子：主角前世创业被资本围剿，重生后只想摆摊还债，却因为信息差和老六操作，把前世仇人一个个变成加盟商。\n前三章开法：开局回到破产前夜，主角没有豪言壮语，先抢占夜市最差摊位；反派来羞辱，他现场做出“穷鬼套餐”卖爆。\n可持续爽点：小生意升级、商业打脸、供应链反杀、敌人变工具人、城市烟火气。\n老六笑点：主角每次报复都包装成“合作共赢”，反派亏着钱还要送锦旗。\n风险修正：都市商业容易流水账；每卷锁一个敌人和一个行业矛盾，避免纯经营日志。\n推荐模型组：Claude Sonnet 4.6做人物网，DeepSeek V4做商业因果，GLM 5.1做段子。\n推荐skills：novel-commercialization, novel-outline-engine, novel-character-arc, novel-polish-humanize。",
+        "tags": ["番茄", "都市", "重生", "商业", "长篇", "老六", "群像"],
+        "source": "manual",
+        "sortOrder": 2,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-004",
+        "type": "选题池",
+        "title": "玄幻脑洞：全宗门都是反派，只有我按门规作恶",
+        "content": "类型：玄幻脑洞 / 宗门 / 反套路\n篇幅：长篇，120-200万字\n平台：番茄男频\n核心钩子：主角穿进魔宗，发现全宗门都在偷偷洗白，只有他认真执行“作恶门规”，结果每次都误打误撞救人、涨功德、升职位。\n前三章开法：开局主角被罚去抢村，结果发现村民是假扮的正道钓鱼队；他按门规先写抢劫告知书，反把正道流程漏洞曝光。\n可持续爽点：魔宗制度喜剧、正邪身份错位、功德误会、宗门升职、正道反派化。\n老六笑点：主角越想当坏人，越被天下人误认为“魔宗良心”。\n风险修正：梗太喜剧可能撑不长；中期揭示正邪秩序被上层操控，主角从误会流转为制度破局。\n推荐模型组：GLM 5.1负责反套路，Claude Sonnet 4.6负责正邪制度，DeepSeek V4写主线。\n推荐skills：novel-genres, novel-setting-system, novel-pleasure-points, fanqie-chapter-rhythm。",
+        "tags": ["番茄", "玄幻", "玄幻脑洞", "宗门", "长篇", "反套路", "老六"],
+        "source": "manual",
+        "sortOrder": 3,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-005",
+        "type": "选题池",
+        "title": "玄幻极道：杀敌爆经验，但经验先发给敌人",
+        "content": "类型：东方玄幻 / 极道升级 / 智斗\n篇幅：长篇，150-220万字\n平台：番茄男频\n核心钩子：主角获得杀敌爆经验系统，却发现经验会先临时发给敌人，让敌人临战突破；主角只能用布局让敌人突破后自爆、反噬、欠债。\n前三章开法：家族试炼中反派临阵突破，全场以为主角死定；主角早在丹药、地形、誓约里埋了三层扣子，反派突破越快死得越准。\n可持续爽点：越级反杀、敌人被迫变强、经验回收、家族夺权、秘境局中局。\n老六笑点：主角口头禅“你先升级，我不急”，敌人听完更慌。\n风险修正：规则复杂；每次只展示一个规则变化，战斗结算必须清楚。\n推荐模型组：DeepSeek V4设计规则战，Claude Sonnet 4.6查漏洞，GPT-5.5控总线。\n推荐skills：novel-outline-engine, novel-setting-system, novel-audit-repair, novel-chapter-plan。",
+        "tags": ["番茄", "玄幻", "东方玄幻", "极道", "长篇", "智斗", "升级"],
+        "source": "manual",
+        "sortOrder": 4,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-006",
+        "type": "选题池",
+        "title": "玄幻经营：宗门破产后，我把祖师爷租出去了",
+        "content": "类型：玄幻宗门经营 / 祖师爷 / 爽文喜剧\n篇幅：中长篇，90-140万字\n平台：番茄男频\n核心钩子：主角继承濒临破产的小宗门，祖师爷残魂只会吹牛。他发现祖师爷的名号还能担保、出场、背锅，于是把宗门债务变成影响力生意。\n前三章开法：债主上门拆山门，主角不求饶，直接推出“祖师爷显灵体验券”；残魂被迫营业，一句话吓跑债主。\n可持续爽点：宗门翻盘、弟子招募、祖师爷社死、门派联盟、资源盘活。\n老六笑点：祖师爷每天骂主角欺师灭祖，第二天继续接商演。\n风险修正：经营线慢热；每章必须有债务压力或外部挑战，不写纯建设。\n推荐模型组：Claude Sonnet 4.6做群像，GLM 5.1做祖师爷吐槽，DeepSeek V4做经营升级。\n推荐skills：novel-worldbuilding, novel-character-arc, novel-emotion-pacing, novel-polish-humanize。",
+        "tags": ["番茄", "玄幻", "宗门经营", "中长篇", "祖师爷", "老六", "轻喜剧"],
+        "source": "manual",
+        "sortOrder": 5,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-007",
+        "type": "选题池",
+        "title": "东方仙侠：炼丹炉成精后，天天举报我偷工减料",
+        "content": "类型：东方仙侠 / 炼丹 / 老六师徒\n篇幅：长篇，120-180万字\n平台：番茄男频\n核心钩子：主角是底层丹徒，靠“省料炼丹”混日子，意外唤醒会说话的炼丹炉。丹炉绑定天道质检，天天举报他，他反而利用质检规则炼出低成本神丹。\n前三章开法：开局宗门丹考，主角被安排最差药材；炼丹炉当众举报他少放三味药，结果炸炉后喷出一颗“穷鬼版破境丹”。\n可持续爽点：丹方改造、质检规则、宗门内卷、丹道打脸、天道漏洞、药材产业链。\n老六笑点：丹炉像监工，主角像会计，两人一边互坑一边发财。\n风险修正：炼丹细节可能重复；每卷换一个丹道场景：考试、黑市、宗门战、秘境药园、仙城垄断。\n推荐模型组：GLM 5.1扩炼丹笑点，DeepSeek V4写正文，Claude Sonnet 4.6审丹道规则。\n推荐skills：fanqie-premise-positioning, novel-setting-system, novel-chapter-draft, fanqie-submission-audit。",
+        "tags": ["番茄", "仙侠", "东方仙侠", "炼丹", "长篇", "老六", "规则爽"],
+        "source": "manual",
+        "sortOrder": 6,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-008",
+        "type": "选题池",
+        "title": "东方仙侠：我在仙门做账，算哭了三界大能",
+        "content": "类型：东方仙侠 / 账房 / 幕后流\n篇幅：长篇，100-160万字\n平台：番茄男频\n核心钩子：主角没有灵根，只是仙门账房，却能看见“因果账”。别人斗法，他查账；别人渡劫，他算税；大能越强，账越脏。\n前三章开法：开局主角被裁员，临走前发现掌门渡劫失败不是天命，而是三百年前一笔香火账没平。\n可持续爽点：账本破案、因果追债、无灵根逆袭、仙门黑幕、三界审计。\n老六笑点：主角对仙尊说“您这个天劫可以分期”，仙尊当场破防。\n风险修正：主角战斗力不足；把“算账”设计成因果法术，逐步获得可执行的制裁能力。\n推荐模型组：GPT-5.5控创意边界，DeepSeek V4做因果链，Claude Sonnet 4.6做伏笔账。\n推荐skills：novel-premise-design, novel-outline-engine, novel-reference-deconstruct, novel-audit-repair。",
+        "tags": ["番茄", "仙侠", "东方仙侠", "幕后流", "长篇", "因果", "老六"],
+        "source": "manual",
+        "sortOrder": 7,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      },
+      {
+        "id": "topic-pool-fanqie-009",
+        "type": "选题池",
+        "title": "东方仙侠：飞升考试三次不过，我改去当考官",
+        "content": "类型：东方仙侠 / 飞升考试 / 制度流喜剧\n篇幅：中长篇，90-130万字\n平台：番茄男频\n核心钩子：主角飞升考试三次不过，发现不是自己菜，而是考试体系被仙界门阀垄断。他转头考进巡考司，从改卷、查舞弊、抓替考开始掀翻飞升秩序。\n前三章开法：开局第三次飞升失败，主角被全城嘲笑；他没有当场逆天，而是把判卷仙吏的错别字贴满城门。\n可持续爽点：考试打脸、制度漏洞、寒门修士共鸣、仙界门阀、巡考办案。\n老六笑点：主角的法宝是红笔，批语比飞剑还伤人。\n风险修正：考试梗可能校园化；把考试升级为飞升资源分配制度，后期接仙界权力斗争。\n推荐模型组：GLM 5.1做笑点和题名，DeepSeek V4做制度线，Claude Sonnet 4.6做人物阵营。\n推荐skills：novel-market-scan, novel-character-arc, novel-emotion-pacing, fanqie-golden-three。",
+        "tags": ["番茄", "仙侠", "东方仙侠", "制度流", "中长篇", "考试", "老六"],
+        "source": "manual",
+        "sortOrder": 8,
+        "createdAt": "2026-06-10T00:00:00.000Z",
+        "updatedAt": "2026-06-10T00:00:00.000Z"
+      }
+    ]
+  }
+}
