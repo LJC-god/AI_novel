@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101828"/>
+      <stop offset="0.62" stop-color="#111827"/>
+      <stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#bg)"/>
+  <circle cx="915" cy="260" r="235" fill="#ef4444" opacity="0.26"/>
+  <circle cx="200" cy="1300" r="300" fill="#ef4444" opacity="0.18"/>
+  <rect x="100" y="230" width="1000" height="1130" fill="#000" opacity="0.22" stroke="#fde68a" stroke-opacity="0.2" stroke-width="3"/>
+  <text x="600" y="170" text-anchor="middle" font-size="54" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#fde68a" font-weight="800">都市高武</text>
+  <text x="600" y="410" text-anchor="middle" font-size="86" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#fde68a" font-weight="900"><tspan x="600" dy="0">我靠扣寿命把武学氪成</tspan><tspan x="600" dy="110">负数</tspan><tspan x="600" dy="110"></tspan></text>
+  <path d="M130 1120 C320 900, 530 970, 720 750 C860 590, 980 530, 1080 420" fill="none" stroke="#ef4444" stroke-width="20" stroke-linecap="round" opacity="0.85"/>
+  <g transform="translate(600 950)">
+    <circle r="190" fill="#ef4444" opacity="0.42"/>
+    <path d="M-115 185 L-62 -80 Q0 -175 62 -80 L115 185 Z" fill="#fde68a" opacity="0.94"/>
+    <circle cx="0" cy="-95" r="62" fill="#fde68a" opacity="0.98"/>
+  </g>
+  <text x="600" y="1285" text-anchor="middle" font-size="42" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#fde68a">把战斗打成财务审计</text>
+  <text x="600" y="1395" text-anchor="middle" font-size="34" font-family="Microsoft YaHei, SimHei, sans-serif" fill="#fde68a" opacity="0.78">投稿推进版 · 前20章</text>
+</svg>

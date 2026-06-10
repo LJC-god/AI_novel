@@ -1,0 +1,35 @@
+[
+  {
+    "dir": "01-07-talking-alchemy-furnace",
+    "title": "炼丹炉成精后，天天举报我偷工减料",
+    "genre": "东方仙侠",
+    "line": "省料也能省出大道",
+    "palette": [
+      "#10231f",
+      "#14b8a6",
+      "#fefce8"
+    ]
+  },
+  {
+    "dir": "02-01-life-debt-martial",
+    "title": "我靠扣寿命把武学氪成负数",
+    "genre": "都市高武",
+    "line": "把战斗打成财务审计",
+    "palette": [
+      "#101828",
+      "#ef4444",
+      "#fde68a"
+    ]
+  },
+  {
+    "dir": "03-05-enemy-first-exp",
+    "title": "杀敌爆经验，但经验先发给敌人",
+    "genre": "东方玄幻",
+    "line": "你先升级，我不急",
+    "palette": [
+      "#0b1120",
+      "#22c55e",
+      "#e0f2fe"
+    ]
+  }
+]

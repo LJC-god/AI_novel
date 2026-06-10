@@ -1,8 +1,12 @@
+param(
+  [string]$Root = 'outputs\fanqie-first-9-books'
+)
+
 $ErrorActionPreference = 'Stop'
 
 Add-Type -AssemblyName System.Drawing
 
-$root = Join-Path (Get-Location) 'outputs\fanqie-first-9-books'
+$root = Join-Path (Get-Location) $Root
 $coverDataPath = Join-Path $root 'cover-data.json'
 $coverDataJson = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($coverDataPath))
 $coverData = $coverDataJson | ConvertFrom-Json
