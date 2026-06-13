@@ -20,6 +20,7 @@ import type {
 } from '../ai/shared-types'
 import { runAiTask } from '../ai/runtime'
 import { createZeroStartRepositories } from './repositories'
+import { applyChapterQualityGuardrails } from './services/quality-guardrails'
 import type {
   ChapterCard,
   ChapterQualityReport,
@@ -703,8 +704,9 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
           targetWordCount: chapterCard?.targetWords ?? 0
         }
       })
-      repos.qualityReports.upsert(tracked.result.report)
-      return { success: true, report: tracked.result.report, aiRunMeta: tracked.aiRunMeta }
+      const guardedReport = applyChapterQualityGuardrails(tracked.result.report)
+      repos.qualityReports.upsert(guardedReport)
+      return { success: true, report: guardedReport, aiRunMeta: tracked.aiRunMeta }
     } catch (error) {
       return toResponseError(error, '生成质量报告失败')
     }

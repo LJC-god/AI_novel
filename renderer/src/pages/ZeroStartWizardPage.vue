@@ -11,8 +11,9 @@ import StyleFusionPanel from '@/features/zeroStart/components/StyleFusionPanel.v
 import TitleSynopsisReviewPanel from '@/features/zeroStart/components/TitleSynopsisReviewPanel.vue'
 import MasterOutlineReviewPanel from '@/features/zeroStart/components/MasterOutlineReviewPanel.vue'
 import ChapterCardBoard from '@/features/zeroStart/components/ChapterCardBoard.vue'
+import ChapterQualityPanel from '@/features/zeroStart/components/ChapterQualityPanel.vue'
 import SubmissionPackagePanel from '@/features/zeroStart/components/SubmissionPackagePanel.vue'
-import type { StyleFingerprint, ZeroStartWizardInput } from '@/features/zeroStart/types'
+import type { ChapterCard, StyleFingerprint, ZeroStartWizardInput } from '@/features/zeroStart/types'
 
 const appStore = useAppStore()
 const { zeroStartStore } = useZeroWorkflow()
@@ -85,6 +86,19 @@ async function approveDefaultStyle(): Promise<void> {
     message.success('已使用默认风格卡')
   } catch {
     message.error(zeroStartStore.lastError || '保存默认风格失败')
+  }
+}
+
+async function auditChapterCardQuality(card: ChapterCard): Promise<void> {
+  if (!card.chapterId) {
+    message.warning('Generate a chapter draft before auditing quality.')
+    return
+  }
+  try {
+    await zeroStartStore.auditChapterQuality(card.chapterId, card.id)
+    message.success('Chapter quality report generated.')
+  } catch {
+    message.error(zeroStartStore.lastError || 'Failed to generate chapter quality report.')
   }
 }
 </script>
@@ -164,14 +178,25 @@ async function approveDefaultStyle(): Promise<void> {
           @approve="zeroStartStore.approveMasterOutline()"
         />
 
-        <ChapterCardBoard
+        <section
           v-else-if="zeroStartStore.currentStage === 'chapters' || zeroStartStore.currentStage === 'draft'"
-          :cards="zeroStartStore.chapterCards"
-          :loading="zeroStartStore.isRunning"
-          @generate="zeroStartStore.generateChapterCards()"
-          @approve="zeroStartStore.approveChapterCard"
-          @draft="zeroStartStore.generateChapterDraftV2"
-        />
+          class="zero-stack"
+        >
+          <ChapterCardBoard
+            :cards="zeroStartStore.chapterCards"
+            :loading="zeroStartStore.isRunning"
+            @generate="zeroStartStore.generateChapterCards()"
+            @approve="zeroStartStore.approveChapterCard"
+            @draft="zeroStartStore.generateChapterDraftV2"
+          />
+          <ChapterQualityPanel
+            :cards="zeroStartStore.chapterCards"
+            :reports="zeroStartStore.latestQualityReports"
+            :reports-by-chapter="zeroStartStore.qualityReportsByChapter"
+            :loading="zeroStartStore.isRunning"
+            @audit="auditChapterCardQuality"
+          />
+        </section>
 
         <SubmissionPackagePanel
           v-else

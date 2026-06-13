@@ -328,3 +328,48 @@
 - 为 `chapter-quality-audit` 增加 PRD 质量通过规则与风险项补全。
 - 让 `chapter-draft-v2` 生成后接入现有 post-generation pipeline。
 - 在 ZeroStart 前端流程中显示章节质量报告入口与结果。
+
+## Epic 7：章节生成与质量报告
+
+状态：完成
+
+### 已执行任务
+
+- Task 7.1：章节卡生成后落库能力已由 Epic 4 IPC/repository 与 Epic 5 store 前端流程复用，本 Epic 验收其继续作为正文与审计入口。
+- Task 7.2：`chapter-draft-v2` 已在 IPC 中读取章节卡、approved style、目标字数等上下文；正文生成成功后会回填章节卡的 `chapterId` 与 `drafted` 状态。
+- Task 7.3：`chapter-draft-v2` 非流式生成路径已接入现有 post-generation pipeline，异步执行状态增量、轻量审计与语义索引，不阻塞正文返回。
+- Task 7.4：新增 `applyChapterQualityGuardrails`，在 `chapter-quality-audit` 落库前按 PRD 规则统一校正 `passed` 与 issues。
+- Task 7.5：新增 `ChapterQualityPanel.vue`，在 ZeroStart 章节/正文阶段显示质量报告、连续性分数、风格分数、原创风险与审计入口。
+
+### 修改文件
+
+- `electron/main/zero-start/services/quality-guardrails.ts`
+- `electron/main/zero-start/ipc.ts`
+- `electron/main/ai/runtime/orchestrator.ts`
+- `renderer/src/features/zeroStart/components/ChapterQualityPanel.vue`
+- `renderer/src/pages/ZeroStartWizardPage.vue`
+- `renderer/src/stores/zeroStart.ts`
+- `scripts/verify-zero-start-quality.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-quality.mjs` 初次失败于缺少 `electron/main/zero-start/services/quality-guardrails.ts`。
+- 验证脚本：`node scripts/verify-zero-start-quality.mjs`
+  - 状态：通过。
+  - 说明：脚本验证 PRD 质量硬线、IPC 落库前 guardrail、`chapter-draft-v2` 后处理触发、前端质量面板与 store 派生报告。
+- 构建命令：`corepack pnpm run build`
+  - 首次构建失败：`streamAiTask` 分支不支持 `chapter-draft-v2`，但被误纳入流式后处理条件，TypeScript 判定无交集。
+  - 修复：仅保留非流式 `runAiTask` 的 `chapter-draft-v2` 后处理触发，流式分支维持旧任务范围。
+  - 最终状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 质量报告由用户在质量面板中手动触发；正文生成后自动串联质量审计可在后续增强，但当前已符合“生成后可看到质量报告”的 MVP 入口要求。
+- post-generation pipeline 对 `chapter-draft-v2` 使用运行时上下文中的 `chapterId`；若未来章节卡允许空 `chapterId`，可在正文生成前预分配章节 ID 进一步增强索引命中。
+
+### 下一步 Epic 8 计划
+
+- 实现 `submission-package-export` 的真实 folder/txt/docx/json 文件写出。
+- 汇总书名简介、标签、正文、章节目录、质量报告、风险提示与项目快照。
+- 在前端投稿包面板接入导出动作。

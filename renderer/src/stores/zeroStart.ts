@@ -49,6 +49,11 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
   const masterOutline = computed(() => masterOutlineByProject.value[activeProjectId.value] ?? null)
   const chapterCards = computed(() => chapterCardsByProject.value[activeProjectId.value] ?? [])
   const submissionPackage = computed(() => submissionPackageByProject.value[activeProjectId.value] ?? null)
+  const latestQualityReports = computed(() =>
+    Object.values(qualityReportsByChapter.value)
+      .map((reports) => reports[0])
+      .filter((report): report is ChapterQualityReport => Boolean(report))
+  )
 
   function setWorkflowState(projectId: string, state?: ProjectWorkflowState | null): void {
     if (state) {
@@ -296,6 +301,14 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
         settings: appStore.appSettings
       }))
       if (!response.success || !response.chapterId) throw new Error(response.error ?? '生成章节正文失败')
+      chapterCardsByProject.value = {
+        ...chapterCardsByProject.value,
+        [projectId]: chapterCards.value.map((card) =>
+          card.id === chapterCardId
+            ? { ...card, chapterId: response.chapterId ?? card.chapterId, status: 'drafted' }
+            : card
+        )
+      }
       setWorkflowState(projectId, response.workflowState)
       currentStage.value = 'draft'
     }, '生成章节正文失败')
@@ -355,6 +368,7 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
     chapterCards,
     chapterCardsByProject,
     qualityReportsByChapter,
+    latestQualityReports,
     submissionPackage,
     submissionPackageByProject,
     isRunning,

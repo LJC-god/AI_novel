@@ -143,7 +143,7 @@ export async function runAiTask(
     }
 
     // 章节生成后：异步提取状态变更 + 建立向量索引（不阻塞返回）
-    if (task.task === 'chapter-first-draft' && projectId && !normalizeFailed) {
+    if ((task.task === 'chapter-first-draft' || task.task === 'chapter-draft-v2') && projectId && !normalizeFailed) {
       const finalContent = (result as { content?: string }).content ?? ''
       const chapterId = String(task.context.chapterId ?? '').trim()
       const chIdx = Number(task.context.chapterIndex ?? task.context.chapterSortOrder ?? 0)
