@@ -290,3 +290,41 @@
 - 复用现有参考小说导入结果生成/保存 `style_fingerprints`。
 - 在拆书页接入风格卡与融合操作。
 - 将 approved style 写入 workflow state，并注入后续章节生成 prompt。
+
+## Epic 6：拆书风格融合
+
+状态：完成
+
+### 已执行任务
+
+- Task 6.1：复用现有参考小说导入与分析结果，通过 `appStore.referenceWorks` 读取已拆书作品。
+- Task 6.2：新增 `ReferenceStyleFingerprintPanel.vue`，可将参考作品分析沉淀为 `style_fingerprints` 草稿。
+- Task 6.3：在拆书库页面接入 `zeroStartStore.generateStyleFusion`，支持多风格卡融合为项目主风格。
+- Task 6.4：保存/融合风格卡仍走 Epic 4 IPC 与 repository，approved style 会写入 workflow state。
+- Task 6.5：已验收 `chapter-cards-generate` 与 `chapter-draft-v2` handler/IPC 会读取 `approvedStyle` 并注入后续生成上下文。
+
+### 修改文件
+
+- `renderer/src/features/zeroStart/components/ReferenceStyleFingerprintPanel.vue`
+- `renderer/src/pages/DeconstructionLibraryPage.vue`
+- `scripts/verify-zero-start-style-fusion.mjs`
+
+### 验收结果
+
+- 验证脚本：`node scripts/verify-zero-start-style-fusion.mjs`
+  - 状态：通过。
+  - 说明：脚本验证参考作品分析复用、风格卡保存事件、风格融合事件、store IPC 调用、IPC 中 `style-fusion-project` 任务调用，以及章节生成对 `approvedStyle` 的注入。
+- 构建命令：`corepack pnpm run build`
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 拆书库页的风格融合入口依赖当前已有选中项目；未选项目时会提示先选择或创建项目。
+- 参考作品的原始拆书导入、分析流程仍沿用现有知识中心能力，本 Epic 只新增 ZeroStart 风格卡沉淀与融合入口。
+
+### 下一步 Epic 7 计划
+
+- 为 `chapter-quality-audit` 增加 PRD 质量通过规则与风险项补全。
+- 让 `chapter-draft-v2` 生成后接入现有 post-generation pipeline。
+- 在 ZeroStart 前端流程中显示章节质量报告入口与结果。

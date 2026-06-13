@@ -1,13 +1,52 @@
 <script setup lang="ts">
-import { ChevronLeft, LibraryBig } from 'lucide-vue-next'
+import { ChevronLeft } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { NButton } from 'naive-ui'
+import { NButton, useMessage } from 'naive-ui'
 import KnowledgeCenterPanel from '@/components/KnowledgeCenterPanel.vue'
+import ReferenceStyleFingerprintPanel from '@/features/zeroStart/components/ReferenceStyleFingerprintPanel.vue'
+import type { StyleFingerprint } from '@/features/zeroStart/types'
 import { useAppStore } from '@/stores/app'
+import { useZeroStartStore } from '@/stores/zeroStart'
 
 const appStore = useAppStore()
+const zeroStartStore = useZeroStartStore()
+const message = useMessage()
+
+const selectedProjectId = computed(() => appStore.selectedProjectId)
+
 function backToProjectCenter(): void {
   appStore.backToProjects()
+}
+
+async function ensureZeroStartProject(): Promise<string> {
+  const projectId = selectedProjectId.value
+  if (!projectId) {
+    throw new Error('Select or create a project before saving ZeroStart style fingerprints.')
+  }
+  if (zeroStartStore.activeProjectId !== projectId) {
+    await zeroStartStore.hydrate(projectId)
+  }
+  return projectId
+}
+
+async function saveFingerprint(fingerprint: StyleFingerprint): Promise<void> {
+  try {
+    const projectId = await ensureZeroStartProject()
+    await zeroStartStore.saveStyleFingerprint({ ...fingerprint, projectId }, false)
+    message.success('Style fingerprint saved.')
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : zeroStartStore.lastError || 'Failed to save style fingerprint.')
+  }
+}
+
+async function generateFusion(): Promise<void> {
+  try {
+    await ensureZeroStartProject()
+    await zeroStartStore.generateStyleFusion()
+    message.success('Fused project style generated.')
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : zeroStartStore.lastError || 'Failed to generate fused style.')
+  }
 }
 </script>
 
@@ -24,6 +63,13 @@ function backToProjectCenter(): void {
 
     <main class="deconstruction-main">
       <div class="deconstruction-body arc-scrollbar">
+        <ReferenceStyleFingerprintPanel
+          :reference-works="appStore.referenceWorks"
+          :project-id="selectedProjectId"
+          :loading="zeroStartStore.isRunning"
+          @save-fingerprint="saveFingerprint"
+          @generate-fusion="generateFusion"
+        />
         <KnowledgeCenterPanel />
       </div>
     </main>
@@ -109,11 +155,13 @@ function backToProjectCenter(): void {
 }
 
 .deconstruction-body {
-  display: flex;
+  display: grid;
   flex: 1;
   width: 100%;
   min-width: 0;
   min-height: 0;
+  gap: 16px;
+  align-content: start;
   overflow: auto;
   padding: 0 clamp(16px, 2vw, 24px) clamp(16px, 2vw, 24px);
 }
