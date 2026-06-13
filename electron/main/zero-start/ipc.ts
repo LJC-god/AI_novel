@@ -92,6 +92,10 @@ function asRecord(value: unknown): Record<string, unknown> {
   return isRecord(value) ? value : {}
 }
 
+function asAiSettings(value: unknown): AiTaskPayload['settings'] {
+  return value as AiTaskPayload['settings']
+}
+
 function requiredString(source: Record<string, unknown>, key: string): string {
   const value = String(source[key] ?? '').trim()
   if (!value) {
@@ -320,7 +324,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'zero-idea-cards',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'idea_generating',
         agentName: 'IdeationAgent',
@@ -379,7 +383,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'zero-idea-merge',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'idea_review',
         agentName: 'IdeaEditorAgent',
@@ -428,7 +432,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'style-fusion-project',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'style_review',
         agentName: 'StyleFusionAgent',
@@ -458,7 +462,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'title-synopsis-generate',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'synopsis_generating',
         agentName: 'TitleSynopsisAgent',
@@ -509,7 +513,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'master-outline-generate',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'outline_generating',
         agentName: 'OutlineArchitectAgent',
@@ -583,7 +587,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'chapter-cards-generate',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'chapter_cards_generating',
         agentName: 'ChapterCardAgent',
@@ -643,7 +647,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'chapter-draft-v2',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'drafting',
         agentName: 'DraftWriterAgent',
@@ -686,7 +690,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'chapter-quality-audit',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'revision',
         agentName: 'ContinuityAuditorAgent',
@@ -717,7 +721,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         db,
         projectId,
         task: 'submission-package-generate',
-        settings: request.settings,
+        settings: asAiSettings(request.settings),
         workflowName: 'zero-start',
         phase: 'export_ready',
         agentName: 'SubmissionAgent',

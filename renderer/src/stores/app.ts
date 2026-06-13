@@ -170,7 +170,7 @@ export const useAppStore = defineStore('app', () => {
   /** 是否已完成初始化水合（从 SQLite 加载数据） */
   const hasHydrated = ref(false)
   /** 当前视图：项目列表 / 新建向导 / 工作台 / 章节写作 / 独立能力页 */
-  const currentView = ref<'projects' | 'wizard' | 'workbench' | 'chapter-studio' | 'deconstruction-library' | 'skills' | 'cover-workbench'>('projects')
+  const currentView = ref<'projects' | 'wizard' | 'zero-start' | 'workbench' | 'chapter-studio' | 'deconstruction-library' | 'skills' | 'cover-workbench'>('projects')
   /** 工作台中当前激活的面板 */
   const activePanel = ref<PanelName>('workflow')
   /** 上一次在工作台中查看的面板（非 chapters），用于从章节写作返回时恢复 */
@@ -915,6 +915,11 @@ export const useAppStore = defineStore('app', () => {
   /** 打开新建项目向导 */
   function openWizard(): void {
     currentView.value = 'wizard'
+  }
+
+  /** 打开零基础新人创作流程 */
+  function openZeroStart(): void {
+    currentView.value = 'zero-start'
   }
 
   /** 关闭向导，返回项目列表 */
@@ -2964,6 +2969,7 @@ export const useAppStore = defineStore('app', () => {
     openProject,
     openCoverWorkbenchPage,
     openSkillsPage,
+    openZeroStart,
     openWizard,
     outlineItems,
     organizationMemberships,

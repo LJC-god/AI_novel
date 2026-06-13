@@ -189,12 +189,12 @@ declare global {
       zeroGetWorkflowState: (
         payload: import('@shared/zero-start-ipc-types').ZeroWorkflowStateGetRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        state?: import('@/types/app').ProjectWorkflowState
+        state?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroUpdateWorkflowState: (
         payload: import('@shared/zero-start-ipc-types').ZeroWorkflowStateUpdateRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        state?: import('@/types/app').ProjectWorkflowState
+        state?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroGenerateIdeas: (
         payload: import('@shared/zero-start-ipc-types').ZeroIdeasGenerateRequest
@@ -202,8 +202,8 @@ declare global {
       zeroApproveIdea: (
         payload: import('@shared/zero-start-ipc-types').ZeroIdeaApproveRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        card?: import('@/types/app').InspirationCard
-        workflowState?: import('@/types/app').ProjectWorkflowState
+        card?: import('@shared/zero-start-ipc-types').InspirationCard
+        workflowState?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroMergeIdea: (
         payload: import('@shared/zero-start-ipc-types').ZeroIdeaMergeRequest
@@ -211,8 +211,8 @@ declare global {
       zeroSaveStyleFingerprint: (
         payload: import('@shared/zero-start-ipc-types').StyleFingerprintSaveRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        fingerprint?: import('@/types/app').StyleFingerprint
-        workflowState?: import('@/types/app').ProjectWorkflowState
+        fingerprint?: import('@shared/zero-start-ipc-types').StyleFingerprint
+        workflowState?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroGenerateStyleFusion: (
         payload: import('@shared/zero-start-ipc-types').StyleFusionRequest
@@ -223,8 +223,8 @@ declare global {
       zeroApproveTitleSynopsis: (
         payload: import('@shared/zero-start-ipc-types').TitleSynopsisApproveRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        candidate?: import('@/types/app').TitleSynopsisCandidate
-        workflowState?: import('@/types/app').ProjectWorkflowState
+        candidate?: import('@shared/zero-start-ipc-types').TitleSynopsisCandidate
+        workflowState?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroGenerateMasterOutline: (
         payload: import('@shared/zero-start-ipc-types').MasterOutlineRequest
@@ -233,7 +233,7 @@ declare global {
         payload: import('@shared/zero-start-ipc-types').MasterOutlineApproveRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
         outlineSnapshotId?: string
-        workflowState?: import('@/types/app').ProjectWorkflowState
+        workflowState?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroGenerateChapterCards: (
         payload: import('@shared/zero-start-ipc-types').ChapterCardsRequest
@@ -241,8 +241,8 @@ declare global {
       zeroApproveChapterCard: (
         payload: import('@shared/zero-start-ipc-types').ChapterCardApproveRequest
       ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
-        card?: import('@/types/app').ChapterCard
-        workflowState?: import('@/types/app').ProjectWorkflowState
+        card?: import('@shared/zero-start-ipc-types').ChapterCard
+        workflowState?: import('@shared/zero-start-ipc-types').ProjectWorkflowState
       }>>
       zeroGenerateChapterDraftV2: (
         payload: import('@shared/zero-start-ipc-types').ChapterDraftV2Request

@@ -1,6 +1,19 @@
 import type {
   AiRunMeta,
-  AppSettings,
+  ChapterCard,
+  ChapterDraftV2Result,
+  ChapterQualityReport,
+  InspirationCard,
+  MasterOutline,
+  ProjectWorkflowState,
+  StyleFingerprint,
+  SubmissionPackage,
+  TitleSynopsisCandidate,
+  ZeroStartWizardInput
+} from '../main/ai/shared-types'
+
+export type {
+  ChapterCard,
   ChapterDraftV2Result,
   ChapterQualityReport,
   InspirationCard,
@@ -30,7 +43,7 @@ export type ZeroWorkflowStateUpdateRequest = {
 export type ZeroIdeasGenerateRequest = {
   projectId: string
   input: ZeroStartWizardInput
-  settings: AppSettings
+  settings: unknown
 }
 
 export type ZeroIdeasGenerateResponse = ZeroStartIpcResponse<{
@@ -47,7 +60,7 @@ export type ZeroIdeaApproveRequest = {
 export type ZeroIdeaMergeRequest = {
   projectId: string
   ideaIds: string[]
-  settings: AppSettings
+  settings: unknown
   userPreference?: string
 }
 
@@ -65,7 +78,7 @@ export type StyleFingerprintSaveRequest = {
 
 export type StyleFusionRequest = {
   projectId: string
-  settings: AppSettings
+  settings: unknown
   fingerprintIds?: string[]
   userStylePreference?: string
 }
@@ -78,7 +91,7 @@ export type StyleFusionResponse = ZeroStartIpcResponse<{
 
 export type TitleSynopsisRequest = {
   projectId: string
-  settings: AppSettings
+  settings: unknown
   userPreference?: string
 }
 
@@ -95,7 +108,7 @@ export type TitleSynopsisApproveRequest = {
 
 export type MasterOutlineRequest = {
   projectId: string
-  settings: AppSettings
+  settings: unknown
   userPreference?: string
 }
 
@@ -113,7 +126,7 @@ export type MasterOutlineApproveRequest = {
 
 export type ChapterCardsRequest = {
   projectId: string
-  settings: AppSettings
+  settings: unknown
   volumeId?: string
   startChapterNo?: number
   chapterCount?: number
@@ -121,7 +134,7 @@ export type ChapterCardsRequest = {
 }
 
 export type ChapterCardsResponse = ZeroStartIpcResponse<{
-  cards?: import('../main/ai/shared-types').ChapterCard[]
+  cards?: ChapterCard[]
   workflowState?: ProjectWorkflowState
   aiRunMeta?: AiRunMeta
 }>
@@ -134,7 +147,7 @@ export type ChapterCardApproveRequest = {
 export type ChapterDraftV2Request = {
   projectId: string
   chapterCardId: string
-  settings: AppSettings
+  settings: unknown
   stream?: boolean
   revisionInstruction?: string
 }
@@ -145,6 +158,7 @@ export type ChapterDraftV2Response = ZeroStartIpcResponse<{
   content?: string
   draft?: ChapterDraftV2Result
   qualityReport?: ChapterQualityReport
+  workflowState?: ProjectWorkflowState
   aiRunMeta?: AiRunMeta
 }>
 
@@ -153,7 +167,7 @@ export type ChapterQualityAuditRequest = {
   chapterId: string
   chapterCardId?: string
   content?: string
-  settings: AppSettings
+  settings: unknown
 }
 
 export type ChapterQualityAuditResponse = ZeroStartIpcResponse<{
@@ -163,7 +177,7 @@ export type ChapterQualityAuditResponse = ZeroStartIpcResponse<{
 
 export type SubmissionPackageRequest = {
   projectId: string
-  settings: AppSettings
+  settings: unknown
   exportFormat?: 'folder' | 'txt' | 'docx' | 'json'
   manuscriptPath?: string
   userInstruction?: string

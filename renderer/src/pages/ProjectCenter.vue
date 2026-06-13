@@ -150,7 +150,7 @@ function requestDeleteProject(projectId: string): void {
       <HomepageHero
         :announcement-status="announcementStatus"
         :update-status="updateStatus"
-        @create="appStore.openWizard()"
+        @create="appStore.openZeroStart()"
         @open-deconstruction="openDeconstructionLibrary"
         @open-cover-workbench="openCoverWorkbenchPage"
         @open-skills="openSkillsPage"

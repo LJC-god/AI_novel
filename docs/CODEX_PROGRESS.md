@@ -228,3 +228,65 @@
 - 新增 `renderer/src/features/zeroStart` 和 `renderer/src/stores/zeroStart.ts`。
 - 新增/改造零基础向导和审核组件。
 - 确保用户只选题材和篇幅即可调用 `zeroGenerateIdeas` 并进入灵感卡审核。
+
+## Epic 5：前端零基础流程
+
+状态：完成
+
+### 已执行任务
+
+- Task 5.1：新增 `renderer/src/features/zeroStart`。
+- Task 5.2：新增 `renderer/src/pages/ZeroStartWizardPage.vue`，并在 `App.vue` 挂载 `zero-start` 视图。
+- Task 5.3：实现 `IdeaCardGrid.vue` 和 `IdeaReviewPanel.vue`。
+- Task 5.4：实现 `TitleSynopsisReviewPanel.vue`。
+- Task 5.5：实现 `MasterOutlineReviewPanel.vue`。
+- Task 5.6：实现 `ChapterCardBoard.vue`。
+- Task 5.7：实现 `SubmissionPackagePanel.vue`。
+- 新增 `renderer/src/stores/zeroStart.ts`，集中维护 zero-start workflow state、灵感卡、风格卡、书名简介、大纲、章节卡、质量报告和投稿包状态。
+- 新增 `ZeroStartWizard.vue`，用户只需选择题材和篇幅即可创建本地项目骨架、持久化，并调用 `zeroGenerateIdeas` 进入灵感卡审核。
+- `ProjectCenter.vue` 的“新建作品”入口改为打开 zero-start 流程，旧 `ProjectWizardPage.vue` 保留兼容。
+
+### 修改文件
+
+- `renderer/src/features/zeroStart/constants.ts`
+- `renderer/src/features/zeroStart/types.ts`
+- `renderer/src/features/zeroStart/composables/useZeroWorkflow.ts`
+- `renderer/src/features/zeroStart/components/ZeroStartWizard.vue`
+- `renderer/src/features/zeroStart/components/IdeaCardGrid.vue`
+- `renderer/src/features/zeroStart/components/IdeaReviewPanel.vue`
+- `renderer/src/features/zeroStart/components/StyleFingerprintPanel.vue`
+- `renderer/src/features/zeroStart/components/StyleFusionPanel.vue`
+- `renderer/src/features/zeroStart/components/TitleSynopsisReviewPanel.vue`
+- `renderer/src/features/zeroStart/components/MasterOutlineReviewPanel.vue`
+- `renderer/src/features/zeroStart/components/ChapterCardBoard.vue`
+- `renderer/src/features/zeroStart/components/SubmissionPackagePanel.vue`
+- `renderer/src/pages/ZeroStartWizardPage.vue`
+- `renderer/src/stores/zeroStart.ts`
+- `renderer/src/stores/app.ts`
+- `renderer/src/App.vue`
+- `renderer/src/pages/ProjectCenter.vue`
+- `electron/shared/zero-start-ipc-types.ts`
+- `scripts/verify-zero-start-frontend.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-frontend.mjs` 初次失败于 `missing renderer/src/stores/zeroStart.ts`。
+- 验证脚本：`node scripts/verify-zero-start-frontend.mjs`。
+  - 状态：通过。
+  - 说明：脚本验证 zero-start feature 目录、store、核心审核组件、页面入口和首页创建入口。
+- 构建命令：`corepack pnpm run build`。
+  - 首次构建失败：renderer `AppSettings` 与主进程 `AppSettings` 形状不一致，缺少 `embeddingModel`。
+  - 修复：zero-start IPC 请求类型将 `settings` 放宽为 `unknown`，主进程在调用 AI runtime 时显式 cast 到 `AiTaskPayload['settings']`。
+  - 最终状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- Epic 5 先打通“题材/篇幅 -> 灵感卡 -> 用户审核”的前端主入口；reload-safe 的实体列表 hydrate 将在后续 IPC/service 扩展时继续增强。
+- 风格融合、章节质量报告自动显示和投稿包真实导出分别在 Epic 6、Epic 7、Epic 8 完成。
+
+### 下一步 Epic 6 计划
+
+- 复用现有参考小说导入结果生成/保存 `style_fingerprints`。
+- 在拆书页接入风格卡与融合操作。
+- 将 approved style 写入 workflow state，并注入后续章节生成 prompt。
