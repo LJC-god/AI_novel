@@ -15,6 +15,7 @@ import {
   normalizeWorkspacePayload
 } from './workspace-types'
 import { initStoryStateSchema } from './story-state-store'
+import { ensureZeroStartSchema } from './zero-start/schema'
 
 const WORKSPACE_DB = 'workspace.db'
 const WORKSPACE_FILE = 'workspace.json'
@@ -358,6 +359,7 @@ export async function ensureWorkspaceDb(): Promise<DatabaseSync> {
   ensureVolumeColumns(db)
   ensureWorkflowDocumentColumns(db)
   ensureKnowledgeDocumentSchema(db)
+  ensureZeroStartSchema(db)
   initStoryStateSchema(db)
 
   await migrateLegacyWorkspaceFile(db)

@@ -49,11 +49,43 @@
 
 ## Epic 1：数据库迁移
 
+状态：完成
+
+### 已执行任务
+
+- Task 1.1：在 `workspace-store.ts` 添加新增 DDL。
+  - 新增 `electron/main/zero-start/schema.ts`，定义 PRD 要求的 ZeroStart SQLite schema。
+  - 新增表：`project_workflow_state`、`inspiration_cards`、`style_fingerprints`、`title_synopsis_candidates`、`outline_snapshots`、`chapter_cards`、`chapter_quality_reports`、`submission_packages`、`workflow_runs`、`workflow_run_steps`。
+  - 新增索引：`idx_inspiration_cards_project_status`、`idx_chapter_cards_project_volume`。
+- Task 1.2：添加 `ensureZeroStartSchema(db)`。
+  - `ensureZeroStartSchema(db)` 执行 `CREATE TABLE IF NOT EXISTS`，再执行 `ensureZeroStartColumns(db)` 补齐已存在但不完整的 ZeroStart 表字段。
+  - 已在 `electron/main/workspace-store.ts` 的数据库初始化流程中接入，位于现有 workspace schema 和 story state schema 初始化之间。
+- Task 1.3：添加 repository 文件。
+  - 新增 `electron/main/zero-start/repositories/index.ts`。
+  - 提供 `createZeroStartRepositories(db)`，包含 workflow state、inspiration cards、style fingerprints、title/synopsis candidates、outline snapshots、chapter cards、quality reports、submission packages、workflow runs、workflow run steps 的基础读写入口。
+  - repository 只依赖 `DatabaseSync`，不依赖 UI 或 Electron renderer。
+- Task 1.4：添加基础 CRUD 验证脚本。
+  - 新增 `scripts/verify-zero-start-schema.mjs`。
+  - RED：初次运行因 `electron/main/zero-start/schema.ts` 不存在失败，符合预期。
+  - GREEN：实现 schema/repository 后运行通过。
+  - 验证覆盖：PRD 表存在、关键字段存在、关键索引存在、局部旧表字段补齐、workflow state 默认创建、inspiration card CRUD/status 更新、chapter card CRUD、删除旧项目时 ZeroStart 子表级联删除。
+
+### 验收结果
+
+- 验证脚本：`node --experimental-strip-types scripts/verify-zero-start-schema.mjs`。
+  - 状态：通过。
+  - 说明：Node 对直接运行 `.ts` 和 `node:sqlite` 输出实验性/模块类型警告，不影响验证结果。
+- 构建命令：`corepack pnpm run build`。
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+## Epic 2：共享类型与 Schema
+
 状态：待开始
 
 下一步入口：
 
-- 在 `workspace-store.ts` 添加 ZeroStart 新表 DDL。
-- 添加 `ensureZeroStartSchema(db)` 并接入现有 schema 初始化/迁移流程。
-- 添加 repository 文件。
-- 添加基础 CRUD 验证脚本或测试。
+- 扩展 `AiTaskName`。
+- 新增 ZeroStart 共享类型文件。
+- 新增 Zod/JSON schema。
+- 更新 `object-schemas.ts`。
