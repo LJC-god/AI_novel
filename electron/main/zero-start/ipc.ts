@@ -21,6 +21,7 @@ import type {
 import { runAiTask } from '../ai/runtime'
 import { createZeroStartRepositories } from './repositories'
 import { applyChapterQualityGuardrails } from './services/quality-guardrails'
+import { exportSubmissionPackage } from './services/submission-export-service'
 import type {
   ChapterCard,
   ChapterQualityReport,
@@ -748,7 +749,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
 
   ipcMain.handle('characterarc:submission-package-export', async (_event, payload: SubmissionPackageExportRequest | unknown) => {
     try {
-      const request = asRecord(payload)
+      const request = asRecord(payload) as SubmissionPackageExportRequest
       const projectId = requiredString(request, 'projectId')
       const packageId = optionalString(request, 'packageId')
       const db = await deps.ensureWorkspaceDb()
@@ -758,7 +759,19 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         ? packages.find((item) => item.id === packageId)
         : packages[0]
       if (!submissionPackage) throw new Error('投稿包不存在')
-      return { success: true, package: submissionPackage as SubmissionPackage }
+      const exported = await exportSubmissionPackage(
+        db,
+        projectId,
+        submissionPackage as SubmissionPackage,
+        request.exportFormat ?? 'folder'
+      )
+      repos.submissionPackages.upsert(exported.package)
+      return {
+        success: true,
+        package: exported.package,
+        filePath: exported.filePath,
+        folderPath: exported.folderPath
+      }
     } catch (error) {
       return toResponseError(error, '导出投稿包失败')
     }

@@ -373,3 +373,45 @@
 - 实现 `submission-package-export` 的真实 folder/txt/docx/json 文件写出。
 - 汇总书名简介、标签、正文、章节目录、质量报告、风险提示与项目快照。
 - 在前端投稿包面板接入导出动作。
+
+## Epic 8：投稿包导出
+
+状态：完成
+
+### 已执行任务
+
+- Task 8.1：继续复用 Epic 3 的 `submission-package-generate` handler 生成投稿包元数据、checklist 与风险报告。
+- Task 8.2：新增 `submission-export-service.ts`，真实写出 folder/txt/docx/json 投稿包文件。
+- Task 8.3：导出内容包含投稿清单、书名简介、标签/卖点、全书大纲、章节目录、正文、质量报告、平台风险提示与 `project-snapshot.json`。
+- Task 8.4：导出后将真实 `manuscriptPath` 回写 `submission_packages`，并通过 IPC 返回 `folderPath` / `filePath`。
+- 前端 `SubmissionPackagePanel.vue` 新增导出按钮，`zeroStartStore.exportSubmissionPackage` 接入 `zeroExportSubmissionPackage`。
+
+### 修改文件
+
+- `electron/main/zero-start/services/submission-export-service.ts`
+- `electron/main/zero-start/ipc.ts`
+- `renderer/src/features/zeroStart/components/SubmissionPackagePanel.vue`
+- `renderer/src/pages/ZeroStartWizardPage.vue`
+- `renderer/src/stores/zeroStart.ts`
+- `scripts/verify-zero-start-submission-export.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-submission-export.mjs` 初次失败于缺少 `electron/main/zero-start/services/submission-export-service.ts`。
+- 验证脚本：`node scripts/verify-zero-start-submission-export.mjs`
+  - 状态：通过。
+  - 说明：脚本验证导出服务、文件清单、docx 生成、质量报告汇总、IPC 调用、路径回写、preload 与前端导出动作。
+- 构建命令：`corepack pnpm run build`
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 导出目录当前固定写入应用 userData 下的 `data/submission-packages/<project>/<package>/`，未弹出目录选择框；后续可按平台模板或用户偏好扩展。
+- 导出会生成 docx，但不做 Word 版式深度排版；MVP 保证可提交素材完整性。
+
+### 下一步 Epic 9 计划
+
+- 增加 ZeroStart 任务的模型角色映射：ideation / planner / writer / auditor / embedding / image。
+- 在云端调用前检查 `cloud_allowed`，默认本地优先。
+- 增强 API Key 本地加密/隐私提示与设置页角色说明。

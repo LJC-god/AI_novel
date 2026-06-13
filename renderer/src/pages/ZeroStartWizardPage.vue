@@ -201,8 +201,10 @@ async function auditChapterCardQuality(card: ChapterCard): Promise<void> {
         <SubmissionPackagePanel
           v-else
           :submission-package="zeroStartStore.submissionPackage"
+          :export-path="zeroStartStore.lastSubmissionExportPath"
           :loading="zeroStartStore.isRunning"
           @generate="zeroStartStore.generateSubmissionPackage"
+          @export-package="zeroStartStore.exportSubmissionPackage()"
         />
       </section>
     </main>

@@ -41,6 +41,7 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
   const currentStage = ref<ZeroStartReviewStage>('wizard')
   const isRunning = ref(false)
   const lastError = ref('')
+  const lastSubmissionExportPath = ref('')
 
   const workflowState = computed(() => workflowStateByProject.value[activeProjectId.value] ?? null)
   const inspirationCards = computed(() => inspirationCardsByProject.value[activeProjectId.value] ?? [])
@@ -352,6 +353,23 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
     }, '生成投稿包失败')
   }
 
+  async function exportSubmissionPackage(exportFormat: 'folder' | 'txt' | 'docx' | 'json' = 'folder'): Promise<void> {
+    await run(async () => {
+      const projectId = activeProjectId.value
+      const response = await window.characterArc.zeroExportSubmissionPackage(toIpcPayload({
+        projectId,
+        packageId: submissionPackage.value?.id,
+        exportFormat
+      }))
+      if (!response.success || !response.package) throw new Error(response.error ?? '导出投稿包失败')
+      submissionPackageByProject.value = {
+        ...submissionPackageByProject.value,
+        [projectId]: response.package
+      }
+      lastSubmissionExportPath.value = response.folderPath ?? response.filePath ?? ''
+    }, '导出投稿包失败')
+  }
+
   return {
     activeProjectId,
     currentStage,
@@ -373,6 +391,7 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
     submissionPackageByProject,
     isRunning,
     lastError,
+    lastSubmissionExportPath,
     hydrate,
     startFromWizard,
     generateIdeas,
@@ -388,6 +407,7 @@ export const useZeroStartStore = defineStore('zeroStart', () => {
     approveChapterCard,
     generateChapterDraftV2,
     auditChapterQuality,
-    generateSubmissionPackage
+    generateSubmissionPackage,
+    exportSubmissionPackage
   }
 })
