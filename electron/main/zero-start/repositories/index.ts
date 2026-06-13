@@ -1,7 +1,18 @@
 import { DatabaseSync } from 'node:sqlite'
+import type {
+  ChapterCard,
+  ChapterQualityReport,
+  InspirationCard,
+  OutlineSnapshot,
+  ProjectWorkflowState,
+  StyleFingerprint,
+  SubmissionPackage,
+  TitleSynopsisCandidate,
+  WorkflowRun,
+  WorkflowRunStep
+} from '../types'
 
 type DbValue = string | number | null
-type JsonObject = Record<string, unknown>
 
 type FieldKind = 'json' | 'boolean'
 
@@ -9,197 +20,6 @@ type FieldSpec = {
   key: string
   column: string
   kind?: FieldKind
-}
-
-export type ZeroStartWorkflowPhase =
-  | 'created'
-  | 'idea_generating'
-  | 'idea_review'
-  | 'idea_approved'
-  | 'style_collecting'
-  | 'style_review'
-  | 'style_approved'
-  | 'synopsis_generating'
-  | 'synopsis_review'
-  | 'synopsis_approved'
-  | 'outline_generating'
-  | 'outline_review'
-  | 'outline_approved'
-  | 'chapter_cards_generating'
-  | 'chapter_cards_review'
-  | 'drafting'
-  | 'revision'
-  | 'export_ready'
-  | 'submitted_archive'
-
-export interface ProjectWorkflowState {
-  projectId: string
-  workflowPhase: ZeroStartWorkflowPhase
-  approvedIdeaId: string
-  approvedStyleId: string
-  approvedSynopsisId: string
-  approvedOutlineSnapshotId: string
-  currentVolumeId: string
-  currentChapterId: string
-  targetPlatform: string
-  targetWords: number
-  audience: string
-  zeroStartMode: boolean
-  cloudAllowed: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface InspirationCard {
-  id: string
-  projectId: string
-  batchId: string
-  title: string
-  oneLineHook: string
-  genre: string
-  targetWords: number
-  protagonistDesign: string
-  protagonistGap: string
-  coreConflict: string
-  openingHooks: unknown[]
-  longTermDrive: string
-  commercialSellingPoints: unknown[]
-  riskNotes: unknown[]
-  tags: string[]
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface StyleFingerprint {
-  id: string
-  projectId: string
-  sourceReferenceIds: string[]
-  title: string
-  sellPointPattern: string
-  protagonistEngine: string
-  conflictEngine: string
-  povRule: string
-  pacingRule: string
-  chapterHookTypes: unknown[]
-  sentenceRegister: JsonObject
-  emotionCurve: string
-  structurePattern: string
-  reusableRules: unknown[]
-  avoidRules: unknown[]
-  copyrightSafetyNote: string
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface TitleSynopsisCandidate {
-  id: string
-  projectId: string
-  title: string
-  subtitle: string
-  introShort: string
-  introLong: string
-  sellingPoints: unknown[]
-  tags: string[]
-  targetPlatform: string
-  audiencePromise: string
-  openingExpectation: string
-  riskNotes: unknown[]
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface OutlineSnapshot {
-  id: string
-  projectId: string
-  versionNo: number
-  outline: JsonObject
-  status: string
-  createdAt: string
-  approvedAt: string
-}
-
-export interface ChapterCard {
-  id: string
-  projectId: string
-  volumeId: string
-  chapterId: string
-  chapterNo: number
-  title: string
-  targetWords: number
-  pov: string
-  chapterGoal: string
-  coreConflict: string
-  scenes: unknown[]
-  informationGain: unknown[]
-  emotionalBeat: string
-  hookEnding: string
-  continuityRequirements: unknown[]
-  styleRequirements: unknown[]
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ChapterQualityReport {
-  id: string
-  projectId: string
-  chapterId: string
-  wordCount: number
-  targetWordCount: number
-  pacingScore: number
-  hookScore: number
-  styleMatchScore: number
-  continuityScore: number
-  originalityRisk: string
-  aiFlavorRisk: string
-  platformRisk: unknown[]
-  issues: unknown[]
-  passed: boolean
-  createdAt: string
-}
-
-export interface SubmissionPackage {
-  id: string
-  projectId: string
-  targetPlatform: string
-  title: string
-  introShort: string
-  introLong: string
-  tags: string[]
-  manuscriptPath: string
-  checklist: unknown[]
-  riskReport: JsonObject
-  exportFormat: string
-  createdAt: string
-}
-
-export interface WorkflowRun {
-  id: string
-  projectId: string
-  workflowName: string
-  phase: string
-  status: string
-  input: JsonObject
-  output: JsonObject
-  error: string
-  startedAt: string
-  finishedAt: string
-}
-
-export interface WorkflowRunStep {
-  id: string
-  runId: string
-  stepName: string
-  agentName: string
-  status: string
-  input: JsonObject
-  output: JsonObject
-  error: string
-  startedAt: string
-  finishedAt: string
 }
 
 type ProjectScopedRecord = {

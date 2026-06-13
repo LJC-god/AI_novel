@@ -1,5 +1,17 @@
 import { z } from 'zod'
 import type { AiTaskName } from '../shared-types'
+import {
+  chapterCardsResultSchema,
+  chapterDraftV2ResultSchema,
+  chapterQualityAuditResultSchema,
+  masterOutlineResultSchema,
+  styleFingerprintResultSchema,
+  submissionPackageResultSchema,
+  titleSynopsisResultSchema,
+  volumeOutlineResultSchema,
+  zeroIdeaCardsResultSchema,
+  zeroIdeaMergeResultSchema
+} from '../../zero-start/schemas'
 
 const stringField = z.string()
 const stringList = z.array(z.string())
@@ -344,7 +356,18 @@ const taskObjectSchemas: Partial<Record<AiTaskName, z.ZodTypeAny>> = {
     role: stringField.optional(),
     notes: stringField.optional(),
     intensity: z.number().optional()
-  })
+  }),
+  'zero-idea-cards': zeroIdeaCardsResultSchema,
+  'zero-idea-merge': zeroIdeaMergeResultSchema,
+  'style-fingerprint-normalize': styleFingerprintResultSchema,
+  'style-fusion-project': styleFingerprintResultSchema,
+  'title-synopsis-generate': titleSynopsisResultSchema,
+  'master-outline-generate': masterOutlineResultSchema,
+  'volume-outline-generate': volumeOutlineResultSchema,
+  'chapter-cards-generate': chapterCardsResultSchema,
+  'chapter-draft-v2': chapterDraftV2ResultSchema,
+  'chapter-quality-audit': chapterQualityAuditResultSchema,
+  'submission-package-generate': submissionPackageResultSchema
 }
 
 export function getStructuredTaskSchema(name: AiTaskName): z.ZodTypeAny | undefined {

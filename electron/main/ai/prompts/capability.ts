@@ -62,7 +62,18 @@ const TASK_DEFAULT_CAPABILITIES: Record<AiTaskName, PromptCapabilityId[]> = {
   'character-enhance': ['settings', 'characters', 'relations', 'worldview', 'writing-style'],
   'worldview-enhance': ['settings', 'worldview', 'characters', 'writing-style'],
   'outline-enhance': ['settings', 'outline', 'worldview', 'characters', 'writing-style'],
-  'relation-enhance': ['settings', 'characters', 'relations', 'worldview', 'writing-style']
+  'relation-enhance': ['settings', 'characters', 'relations', 'worldview', 'writing-style'],
+  'zero-idea-cards': ['settings', 'workflow', 'inspiration', 'writing-style', 'project-skills'],
+  'zero-idea-merge': ['settings', 'workflow', 'inspiration', 'writing-style', 'project-skills'],
+  'style-fingerprint-normalize': ['settings', 'analysis', 'writing-style', 'import-export', 'project-skills'],
+  'style-fusion-project': ['settings', 'workflow', 'analysis', 'writing-style', 'project-skills'],
+  'title-synopsis-generate': ['settings', 'workflow', 'inspiration', 'writing-style', 'project-skills'],
+  'master-outline-generate': ['settings', 'workflow', 'outline', 'inspiration', 'writing-style', 'project-skills'],
+  'volume-outline-generate': ['settings', 'workflow', 'outline', 'writing-style', 'project-skills'],
+  'chapter-cards-generate': ['settings', 'workflow', 'outline', 'chapters', 'writing-style', 'project-skills'],
+  'chapter-draft-v2': ['settings', 'workflow', 'outline', 'chapters', 'worldview', 'characters', 'relations', 'writing-style', 'project-skills'],
+  'chapter-quality-audit': ['settings', 'workflow', 'chapters', 'analysis', 'worldview', 'characters', 'relations', 'writing-style'],
+  'submission-package-generate': ['settings', 'workflow', 'chapters', 'analysis', 'import-export', 'writing-style']
 }
 
 /**

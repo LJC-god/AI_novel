@@ -4,6 +4,32 @@
  */
 
 import type { SpiralSeedResult, SpiralExpandResult, SpiralValidateResult } from './spiral/types'
+import type { ZeroStartAiTaskResult } from '../zero-start/types'
+
+export type {
+  ChapterCard,
+  ChapterCardsResult,
+  ChapterDraftV2Result,
+  ChapterQualityAuditResult,
+  ChapterQualityReport,
+  InspirationCard,
+  MasterOutline,
+  MasterOutlineResult,
+  ProjectWorkflowState,
+  StyleFingerprint,
+  StyleFingerprintResult,
+  SubmissionPackage,
+  SubmissionPackageResult,
+  TitleSynopsisCandidate,
+  TitleSynopsisResult,
+  VolumeOutlineResult,
+  WorkflowRun,
+  WorkflowRunStep,
+  ZeroIdeaCardsResult,
+  ZeroIdeaMergeResult,
+  ZeroStartAiTaskResult,
+  ZeroStartWizardInput
+} from '../zero-start/types'
 
 /** AI 供应商标识。支持预设值或自定义字符串。 */
 export type ProviderName =
@@ -100,6 +126,17 @@ export type AiTaskName =
   | 'worldview-enhance'
   | 'outline-enhance'
   | 'relation-enhance'
+  | 'zero-idea-cards'
+  | 'zero-idea-merge'
+  | 'style-fingerprint-normalize'
+  | 'style-fusion-project'
+  | 'title-synopsis-generate'
+  | 'master-outline-generate'
+  | 'volume-outline-generate'
+  | 'chapter-cards-generate'
+  | 'chapter-draft-v2'
+  | 'chapter-quality-audit'
+  | 'submission-package-generate'
 
 /**
  * AI 运行时注入 prompt 的知识条目。
@@ -527,6 +564,7 @@ export type AiTaskResult =
   | SpiralSeedResult
   | SpiralExpandResult
   | SpiralValidateResult
+  | ZeroStartAiTaskResult
 
 /** AI 任务的完整响应：结果 + 运行元数据 */
 export type AiTaskResponse = {

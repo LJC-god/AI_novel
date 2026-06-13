@@ -72,6 +72,13 @@
 
 ### 验收结果
 
+- Epic 1 复验时间：2026-06-13。
+- 复验检查：
+  - `workspace-store.ts` 已导入并调用 `ensureZeroStartSchema(db)`。
+  - `electron/main/zero-start/schema.ts` 已包含 PRD 要求的 10 张 ZeroStart 表和关键索引。
+  - `ensureZeroStartSchema(db)` / `ensureZeroStartColumns(db)` 提供自动建表和局部旧表补列迁移。
+  - `scripts/verify-zero-start-schema.mjs` 验证旧项目父表存在时可增量建表，局部旧 ZeroStart 表可补列，删除旧项目时 ZeroStart 子表级联删除。
+  - `electron/main/zero-start/repositories/index.ts` 已创建基础 repository。
 - 验证脚本：`node --experimental-strip-types scripts/verify-zero-start-schema.mjs`。
   - 状态：通过。
   - 说明：Node 对直接运行 `.ts` 和 `node:sqlite` 输出实验性/模块类型警告，不影响验证结果。
@@ -81,11 +88,53 @@
 
 ## Epic 2：共享类型与 Schema
 
+状态：完成
+
+### 已执行任务
+
+- Task 2.1：扩展 `AiTaskName`。
+  - 在 `electron/main/ai/shared-types.ts` 新增：`zero-idea-cards`、`zero-idea-merge`、`style-fingerprint-normalize`、`style-fusion-project`、`title-synopsis-generate`、`master-outline-generate`、`volume-outline-generate`、`chapter-cards-generate`、`chapter-draft-v2`、`chapter-quality-audit`、`submission-package-generate`。
+  - 同步补齐 `electron/main/ai/prompts/capability.ts` 的默认 capability 映射，避免 `Record<AiTaskName, ...>` 因新任务缺键而破坏构建。
+- Task 2.2：新增 ZeroStart 共享类型文件。
+  - 新增 `electron/main/zero-start/types.ts`。
+  - 已定义：`ZeroStartWizardInput`、`ProjectWorkflowState`、`InspirationCard`、`StyleFingerprint`、`TitleSynopsisCandidate`、`MasterOutline`、`ChapterCard`、`ChapterQualityReport`、`SubmissionPackage`、`WorkflowRun`、`WorkflowRunStep`。
+  - 补充定义 AI 输出结果类型：`ZeroIdeaCardsResult`、`ZeroIdeaMergeResult`、`StyleFingerprintResult`、`TitleSynopsisResult`、`MasterOutlineResult`、`VolumeOutlineResult`、`ChapterCardsResult`、`ChapterDraftV2Result`、`ChapterQualityAuditResult`、`SubmissionPackageResult`。
+  - `electron/main/zero-start/repositories/index.ts` 已改为复用共享类型，保证 Epic 1 SQLite 字段转换和 Epic 2 类型共用同一套结构。
+- Task 2.3：新增 Zod/JSON schema。
+  - 新增 `electron/main/zero-start/schemas/index.ts`。
+  - 覆盖 ZeroStart workflow、向导输入、数据库实体和 11 个新增 AI 任务输出 schema。
+- Task 2.4：更新 `object-schemas.ts`。
+  - 在 `electron/main/ai/tasks/object-schemas.ts` 中为 11 个新增 AI 任务注册结构化输出 schema。
+  - 在 `electron/main/ai/shared-types.ts` 中 re-export ZeroStart 类型，并把 `ZeroStartAiTaskResult` 加入 `AiTaskResult` 联合类型。
+
+### 验收结果
+
+- TDD RED：`node --experimental-strip-types scripts/verify-zero-start-types.mjs` 初次失败于 `missing structured schema for zero-idea-cards`。
+- 验证脚本：`node --experimental-strip-types scripts/verify-zero-start-types.mjs`。
+  - 状态：通过。
+  - 说明：脚本验证新增任务名登记、结构化 schema 注册和样例输出 parse。
+- 回归脚本：`node --experimental-strip-types scripts/verify-zero-start-schema.mjs`。
+  - 状态：通过。
+- `any` 检查：`rg -n "\bany\b" electron/main/zero-start electron/main/ai/shared-types.ts electron/main/ai/tasks/object-schemas.ts scripts/verify-zero-start-types.mjs`。
+  - 状态：无匹配。
+- 构建命令：`corepack pnpm run build`。
+  - 首次构建失败：`PromptCapabilityId` 全量映射缺少新增 ZeroStart 任务键。
+  - 修复：补齐 `electron/main/ai/prompts/capability.ts` 的 ZeroStart 任务默认 capability。
+  - 最终状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 尚未实现 Epic 3 的 AI task handler，因此新增 task name 还不会被 `tasks/index.ts` 注册运行。
+- 直接用 Node 运行 `.ts` 验证脚本仍会显示模块类型/实验性 SQLite 警告，不影响项目构建。
+
+## Epic 3：AI 任务 Handler
+
 状态：待开始
 
 下一步入口：
 
-- 扩展 `AiTaskName`。
-- 新增 ZeroStart 共享类型文件。
-- 新增 Zod/JSON schema。
-- 更新 `object-schemas.ts`。
+- 为 11 个 ZeroStart 任务新增 `TaskHandler`。
+- 每个 handler 需要 `buildPrompt`、`normalize`、`validate`、`describeValidationErrors`。
+- 在 `electron/main/ai/tasks/index.ts` 注册新增 handler。
+- 继续复用 Epic 2 的 Zod schema 和 Epic 1 repository，不做 UI/IPC。
