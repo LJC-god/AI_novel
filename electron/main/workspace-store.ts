@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, safeStorage } from 'electron'
 import { join } from 'node:path'
 import { mkdir, readFile } from 'node:fs/promises'
 import { DatabaseSync } from 'node:sqlite'
@@ -19,6 +19,7 @@ import { ensureZeroStartSchema } from './zero-start/schema'
 
 const WORKSPACE_DB = 'workspace.db'
 const WORKSPACE_FILE = 'workspace.json'
+const SAFE_STORAGE_PREFIX = 'safe:v1:'
 
 export function getWorkspaceDirPath(): string {
   return join(app.getPath('userData'), 'data')
@@ -34,6 +35,38 @@ function getWorkspaceDbPath(): string {
 
 let workspaceDb: DatabaseSync | null = null
 let dbInitPromise: Promise<DatabaseSync> | null = null
+
+function encryptSecretForStorage(value: string): string {
+  const secret = value.trim()
+  if (!secret || secret.startsWith(SAFE_STORAGE_PREFIX)) return secret
+  if (!safeStorage.isEncryptionAvailable()) return secret
+  return `${SAFE_STORAGE_PREFIX}${safeStorage.encryptString(secret).toString('base64')}`
+}
+
+function decryptSecretFromStorage(value: string): string {
+  const secret = value.trim()
+  if (!secret.startsWith(SAFE_STORAGE_PREFIX)) return secret
+  if (!safeStorage.isEncryptionAvailable()) return ''
+  try {
+    return safeStorage.decryptString(Buffer.from(secret.slice(SAFE_STORAGE_PREFIX.length), 'base64'))
+  } catch {
+    return ''
+  }
+}
+
+function encryptProfilesForStorage<T extends { apiKey: string }>(profiles: T[] = []): T[] {
+  return profiles.map((profile) => ({
+    ...profile,
+    apiKey: encryptSecretForStorage(profile.apiKey)
+  }))
+}
+
+function decryptProfilesFromStorage<T extends { apiKey: string }>(profiles: T[] = []): T[] {
+  return profiles.map((profile) => ({
+    ...profile,
+    apiKey: decryptSecretFromStorage(profile.apiKey)
+  }))
+}
 
 export function getWorkspaceDbIfInitialized(): DatabaseSync | null {
   return workspaceDb
@@ -785,16 +818,16 @@ export function readWorkspaceSnapshot(db: DatabaseSync): WorkspacePayload | null
             ...normalizeAppSettings({
               provider: settings.provider,
               model: settings.model,
-              apiKey: settings.apiKey,
+              apiKey: decryptSecretFromStorage(settings.apiKey),
               baseUrl: settings.baseUrl,
-              aiProfiles: parseJson(settings.aiProfilesJson, []),
+              aiProfiles: decryptProfilesFromStorage(parseJson(settings.aiProfilesJson, [])),
               activeAiProfileId: settings.activeAiProfileId,
               modelRoleProfileMap: parseJson(settings.modelRoleProfileMapJson, {}),
               modelGroups: parseJson(settings.modelGroupsJson, []),
               activeModelGroupId: settings.activeModelGroupId,
               imageProvider: settings.imageProvider,
               imageModel: settings.imageModel,
-              imageApiKey: settings.imageApiKey,
+              imageApiKey: decryptSecretFromStorage(settings.imageApiKey),
               imageBaseUrl: settings.imageBaseUrl,
               autoSaveInterval: settings.autoSaveInterval,
               uiScale: settings.uiScale,
@@ -1187,16 +1220,16 @@ export function readWorkspaceSnapshot(db: DatabaseSync): WorkspacePayload | null
       ...normalizeAppSettings({
         provider: settings.provider,
         model: settings.model,
-        apiKey: settings.apiKey,
+        apiKey: decryptSecretFromStorage(settings.apiKey),
         baseUrl: settings.baseUrl,
-        aiProfiles: parseJson(settings.aiProfilesJson, []),
+        aiProfiles: decryptProfilesFromStorage(parseJson(settings.aiProfilesJson, [])),
         activeAiProfileId: settings.activeAiProfileId,
         modelRoleProfileMap: parseJson(settings.modelRoleProfileMapJson, {}),
         modelGroups: parseJson(settings.modelGroupsJson, []),
         activeModelGroupId: settings.activeModelGroupId,
         imageProvider: settings.imageProvider,
         imageModel: settings.imageModel,
-        imageApiKey: settings.imageApiKey,
+        imageApiKey: decryptSecretFromStorage(settings.imageApiKey),
         imageBaseUrl: settings.imageBaseUrl,
         autoSaveInterval: settings.autoSaveInterval,
         uiScale: settings.uiScale,
@@ -1699,16 +1732,16 @@ export function writeWorkspaceSnapshot(db: DatabaseSync, payload: WorkspacePaylo
       payload.selectedProjectId,
       normalizedAppSettings.provider,
       normalizedAppSettings.model,
-      normalizedAppSettings.apiKey,
+      encryptSecretForStorage(normalizedAppSettings.apiKey),
       normalizedAppSettings.baseUrl,
-      JSON.stringify(normalizedAppSettings.aiProfiles ?? []),
+      JSON.stringify(encryptProfilesForStorage(normalizedAppSettings.aiProfiles ?? [])),
       normalizedAppSettings.activeAiProfileId,
       JSON.stringify(normalizedAppSettings.modelRoleProfileMap ?? {}),
       JSON.stringify(normalizedAppSettings.modelGroups ?? []),
       normalizedAppSettings.activeModelGroupId ?? '',
       normalizedAppSettings.imageProvider,
       normalizedAppSettings.imageModel,
-      normalizedAppSettings.imageApiKey,
+      encryptSecretForStorage(normalizedAppSettings.imageApiKey),
       normalizedAppSettings.imageBaseUrl,
       normalizedAppSettings.autoSaveInterval,
       normalizedAppSettings.uiScale,
@@ -1796,16 +1829,16 @@ export function writeAppSettingsRow(
     metadata.selectedProjectId,
     normalized.provider,
     normalized.model,
-    normalized.apiKey,
+    encryptSecretForStorage(normalized.apiKey),
     normalized.baseUrl,
-    JSON.stringify(normalized.aiProfiles ?? []),
+    JSON.stringify(encryptProfilesForStorage(normalized.aiProfiles ?? [])),
     normalized.activeAiProfileId,
     JSON.stringify(normalized.modelRoleProfileMap ?? {}),
     JSON.stringify(normalized.modelGroups ?? []),
     normalized.activeModelGroupId ?? '',
     normalized.imageProvider,
     normalized.imageModel,
-    normalized.imageApiKey,
+    encryptSecretForStorage(normalized.imageApiKey),
     normalized.imageBaseUrl,
     normalized.autoSaveInterval,
     normalized.uiScale,

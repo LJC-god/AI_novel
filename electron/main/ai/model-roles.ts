@@ -10,6 +10,12 @@ export type ModelRoleId =
   | 'draft'
   | 'polish'
   | 'json'
+  | 'ideation'
+  | 'planner'
+  | 'writer'
+  | 'auditor'
+  | 'embedding'
+  | 'image'
 
 export function resolveSettingsForModelRole(settings: AppSettings, role: unknown): AppSettings {
   return resolveSettingsAndRouteForModelRole(settings, role).settings

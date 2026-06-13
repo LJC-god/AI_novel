@@ -19,6 +19,8 @@ import type {
   ZeroIdeaMergeResult
 } from '../ai/shared-types'
 import { runAiTask } from '../ai/runtime'
+import { resolveSettingsForModelRole } from '../ai/model-roles'
+import { isLocalBaseUrl, normalizeSettings } from '../ai/settings'
 import { createZeroStartRepositories } from './repositories'
 import { applyChapterQualityGuardrails } from './services/quality-guardrails'
 import { exportSubmissionPackage } from './services/submission-export-service'
@@ -98,6 +100,25 @@ function asAiSettings(value: unknown): AiTaskPayload['settings'] {
   return value as AiTaskPayload['settings']
 }
 
+function isCloudModelSettings(settings: AiTaskPayload['settings']): boolean {
+  const normalized = normalizeSettings(settings)
+  if (normalized.provider === 'ollama') return false
+  if (isLocalBaseUrl(normalized.baseUrl)) return false
+  if (/^https?:\/\/\[::1\](?::\d+)?(?:\/|$)/i.test(normalized.baseUrl.trim())) return false
+  return true
+}
+
+function assertCloudAllowedForSettings(
+  settings: AiTaskPayload['settings'],
+  cloudAllowed: boolean,
+  modelRole: unknown
+): void {
+  const routedSettings = resolveSettingsForModelRole(settings, modelRole)
+  if (!cloudAllowed && isCloudModelSettings(routedSettings)) {
+    throw new Error('当前 ZeroStart 项目未允许云端模型调用。请在向导中勾选 cloudAllowed，或切换到 Ollama / localhost / 127.0.0.1 / [::1] 本地模型。')
+  }
+}
+
 function requiredString(source: Record<string, unknown>, key: string): string {
   const value = String(source[key] ?? '').trim()
   if (!value) {
@@ -128,6 +149,8 @@ function getAiRunMeta(error: unknown): AiRunMeta | undefined {
 
 async function runTrackedZeroTask<T>(options: TrackedTaskOptions): Promise<TrackedTaskResult<T>> {
   const repos = createZeroStartRepositories(options.db)
+  const workflowState = repos.workflowState.getOrCreate(options.projectId)
+  assertCloudAllowedForSettings(options.settings, workflowState.cloudAllowed, options.context.modelRole)
   const startedAt = now()
   const runId = createId('workflow-run')
   const stepId = createId('workflow-step')
@@ -331,6 +354,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'idea_generating',
         agentName: 'IdeationAgent',
         context: {
+          modelRole: 'ideation',
           wizardInput: request.input,
           batchId: createId('idea-batch'),
           genreKey: request.input.genreKey,
@@ -390,6 +414,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'idea_review',
         agentName: 'IdeaEditorAgent',
         context: {
+          modelRole: 'ideation',
           selectedIdeaCards,
           userPreference: request.userPreference ?? '',
           workflowState: repos.workflowState.getOrCreate(projectId)
@@ -439,6 +464,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'style_review',
         agentName: 'StyleFusionAgent',
         context: {
+          modelRole: 'planner',
           approvedIdea: getApprovedIdea(repos.inspirationCards.listByProject(projectId), state),
           styleFingerprints,
           userStylePreference: request.userStylePreference ?? '',
@@ -469,6 +495,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'synopsis_generating',
         agentName: 'TitleSynopsisAgent',
         context: {
+          modelRole: 'planner',
           approvedIdea: getApprovedIdea(repos.inspirationCards.listByProject(projectId), state),
           approvedStyle: getApprovedStyle(repos.styleFingerprints.listByProject(projectId), state),
           targetPlatform: state.targetPlatform,
@@ -520,6 +547,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'outline_generating',
         agentName: 'OutlineArchitectAgent',
         context: {
+          modelRole: 'planner',
           approvedIdea: getApprovedIdea(repos.inspirationCards.listByProject(projectId), state),
           approvedStyle: getApprovedStyle(repos.styleFingerprints.listByProject(projectId), state),
           approvedSynopsis: getApprovedSynopsis(repos.synopsisCandidates.listByProject(projectId), state),
@@ -594,6 +622,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'chapter_cards_generating',
         agentName: 'ChapterCardAgent',
         context: {
+          modelRole: 'planner',
           volumeId: request.volumeId || state.currentVolumeId,
           masterOutline: outlineSnapshot?.outline ?? {},
           approvedStyle: getApprovedStyle(repos.styleFingerprints.listByProject(projectId), state),
@@ -654,6 +683,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'drafting',
         agentName: 'DraftWriterAgent',
         context: {
+          modelRole: 'writer',
           chapterId: card.chapterId,
           chapterCard: card,
           approvedStyle: getApprovedStyle(repos.styleFingerprints.listByProject(projectId), state),
@@ -697,6 +727,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'revision',
         agentName: 'ContinuityAuditorAgent',
         context: {
+          modelRole: 'auditor',
           chapterId,
           chapterCard,
           chapterDraft: request.content ?? '',
@@ -729,6 +760,7 @@ export function registerZeroStartIpcHandlers(deps: ZeroStartIpcDeps): void {
         phase: 'export_ready',
         agentName: 'SubmissionAgent',
         context: {
+          modelRole: 'auditor',
           targetPlatform: state.targetPlatform,
           approvedSynopsis: getApprovedSynopsis(repos.synopsisCandidates.listByProject(projectId), state),
           approvedStyle: getApprovedStyle(repos.styleFingerprints.listByProject(projectId), state),

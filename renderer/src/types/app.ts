@@ -842,6 +842,12 @@ export type ModelRoleId =
   | 'draft'
   | 'polish'
   | 'json'
+  | 'ideation'
+  | 'planner'
+  | 'writer'
+  | 'auditor'
+  | 'embedding'
+  | 'image'
 
 export type ModelRoleProfileMap = Partial<Record<ModelRoleId, string>>
 

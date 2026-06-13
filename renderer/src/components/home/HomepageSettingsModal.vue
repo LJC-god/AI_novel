@@ -551,6 +551,7 @@ async function saveSettings(): Promise<void> {
                   @update:value="(value) => updateEditingProfile({ apiKey: value })"
                 />
               </n-form-item>
+              <p class="preset-hint">API keys are encrypted on this device with Electron safeStorage when available.</p>
               <n-form-item label="模型名称">
                 <div class="model-input-row">
                   <n-select
@@ -599,6 +600,7 @@ async function saveSettings(): Promise<void> {
             <div class="role-router__head">
               <strong>模型组协作角色</strong>
               <span>模型组是一套小说生产流水线配置；AI 调用日志会记录本次使用的组、岗位和具体模型。</span>
+              <span>ZeroStart role presets: ideation, planner, writer, auditor, embedding, image.</span>
             </div>
             <div class="model-group-field">
               <n-form-item label="当前模型组">

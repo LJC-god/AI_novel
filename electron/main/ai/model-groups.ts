@@ -9,6 +9,12 @@ export type ModelRoleId =
   | 'draft'
   | 'polish'
   | 'json'
+  | 'ideation'
+  | 'planner'
+  | 'writer'
+  | 'auditor'
+  | 'embedding'
+  | 'image'
 
 export type ModelRoleProfileMap = Partial<Record<ModelRoleId, string>>
 
@@ -37,7 +43,13 @@ const MODEL_ROLE_LABELS: Record<ModelRoleId, string> = {
   assets: '设定资产',
   draft: '正文起草',
   polish: '润色审校',
-  json: '结构化输出'
+  json: '结构化输出',
+  ideation: 'ZeroStart 灵感',
+  planner: 'ZeroStart 规划',
+  writer: 'ZeroStart 正文',
+  auditor: 'ZeroStart 审计',
+  embedding: '向量检索',
+  image: '图像生成'
 }
 
 export const MODEL_ROLE_IDS = Object.keys(MODEL_ROLE_LABELS) as ModelRoleId[]
@@ -75,7 +87,13 @@ export function createDefaultModelGroup(roleProfileMap: ModelRoleProfileMap = {}
       assets: '世界观、角色、人际关系、伏笔账本',
       draft: '章节正文单章起草，审稿修复后再续章',
       polish: '去 AI 味、番茄节奏修复、一致性审稿',
-      json: '稳定结构化输出与写入草稿'
+      json: '稳定结构化输出与写入草稿',
+      ideation: 'ZeroStart 灵感卡、题材变体和新手友好开篇钩子',
+      planner: 'ZeroStart 书名简介、大纲、风格融合和章节卡',
+      writer: 'ZeroStart 正文生成，遵守 approved style 与 avoid rules',
+      auditor: 'ZeroStart 质量报告、修改风险和投稿包检查',
+      embedding: '语义检索与 embedding 模型调用',
+      image: '封面提示词与图像生成路由'
     },
     createdAt: timestamp,
     updatedAt: timestamp

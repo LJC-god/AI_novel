@@ -415,3 +415,49 @@
 - 增加 ZeroStart 任务的模型角色映射：ideation / planner / writer / auditor / embedding / image。
 - 在云端调用前检查 `cloud_allowed`，默认本地优先。
 - 增强 API Key 本地加密/隐私提示与设置页角色说明。
+
+## Epic 9：模型角色和隐私
+
+状态：完成
+
+### 已执行任务
+
+- Task 9.1：设置页模型组角色列表新增 ZeroStart 角色说明：ideation / planner / writer / auditor / embedding / image，并提示 API Key 本地加密保存。
+- Task 9.2：主进程与渲染层模型角色类型均已扩展；ZeroStart AI 任务显式传入模型角色：
+  - `zero-idea-cards` / `zero-idea-merge` -> `ideation`
+  - `style-fusion-project` / `title-synopsis-generate` / `master-outline-generate` / `chapter-cards-generate` -> `planner`
+  - `chapter-draft-v2` -> `writer`
+  - `chapter-quality-audit` / `submission-package-generate` -> `auditor`
+- Task 9.3：ZeroStart AI 调用前按角色路由后的模型配置执行云端检测；当 `cloudAllowed = false` 且模型不是 Ollama / localhost / 127.0.0.1 / `[::1]` 时阻止调用。
+- Task 9.4：`workspace-store.ts` 保存 app settings 时使用 Electron `safeStorage` 加密主 API Key、AI profile API Key 和图片 API Key；读取时兼容旧明文与新密文。
+
+### 修改文件
+
+- `electron/main/ai/model-groups.ts`
+- `electron/main/ai/model-roles.ts`
+- `electron/main/zero-start/ipc.ts`
+- `electron/main/workspace-store.ts`
+- `renderer/src/features/settings/modelGroups.ts`
+- `renderer/src/types/app.ts`
+- `renderer/src/components/home/HomepageSettingsModal.vue`
+- `scripts/verify-zero-start-privacy.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-privacy.mjs` 初次失败于缺少 `ideation` 模型角色。
+- 验证脚本：`node scripts/verify-zero-start-privacy.mjs`
+  - 状态：通过。
+  - 说明：脚本验证新增模型角色、ZeroStart 任务 role map、`cloudAllowed` 拦截、safeStorage 加密辅助函数和设置页隐私说明。
+- 构建命令：`corepack pnpm run build`
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 若系统环境不支持 Electron `safeStorage`，会兼容回退为原存储方式，保证旧项目可用；设置页已明确提示“可用时加密”。
+- 云端许可当前在 ZeroStart AI 入口统一拦截；其他旧任务仍保持原有行为，避免改变既有高级工作台工作流。
+
+### Epic 0-9 总结
+
+- ZeroStart 主流程已从题材/篇幅进入灵感卡、风格卡、书名简介、大纲、章节卡、正文、质量报告与投稿包导出。
+- 每个 Epic 均已执行 `corepack pnpm run build`，修复阻塞错误，并提交独立 commit。

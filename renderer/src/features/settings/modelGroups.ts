@@ -8,7 +8,13 @@ export const MODEL_ROLE_OPTIONS: Array<{ id: ModelRoleId; label: string; hint: s
   { id: 'assets', label: '设定资产', hint: '世界观、角色、人际关系和伏笔' },
   { id: 'draft', label: '正文起草', hint: '章节正文与场景推进' },
   { id: 'polish', label: '润色审校', hint: '语言优化、节奏修复和一致性检查' },
-  { id: 'json', label: '结构化输出', hint: '稳定 JSON 与写入项目的数据草稿' }
+  { id: 'json', label: '结构化输出', hint: '稳定 JSON 与写入项目的数据草稿' },
+  { id: 'ideation', label: 'ZeroStart 灵感', hint: '灵感卡、题材变体和新手开篇钩子' },
+  { id: 'planner', label: 'ZeroStart 规划', hint: '书名简介、大纲、风格融合和章节卡' },
+  { id: 'writer', label: 'ZeroStart 正文', hint: '正文生成，遵守 approved style 与 avoid rules' },
+  { id: 'auditor', label: 'ZeroStart 审计', hint: '质量报告、修改风险和投稿包检查' },
+  { id: 'embedding', label: '向量检索', hint: 'embedding 与语义检索' },
+  { id: 'image', label: '图像生成', hint: '封面提示词和图片模型' }
 ]
 
 export const DEFAULT_MODEL_GROUP_ID = 'fanqie-xianxia-longform'
@@ -44,7 +50,13 @@ export function createDefaultModelGroup(roleProfileMap: ModelRoleProfileMap = {}
       assets: '世界观、角色、人际关系、伏笔账本',
       draft: '章节正文单章起草，审稿修复后再续章',
       polish: '去 AI 味、番茄节奏修复、一致性审稿',
-      json: '稳定结构化输出与写入草稿'
+      json: '稳定结构化输出与写入草稿',
+      ideation: 'ZeroStart 灵感卡、题材变体和新手友好开篇钩子',
+      planner: 'ZeroStart 书名简介、大纲、风格融合和章节卡',
+      writer: 'ZeroStart 正文生成，遵守 approved style 与 avoid rules',
+      auditor: 'ZeroStart 质量报告、修改风险和投稿包检查',
+      embedding: '语义检索与 embedding 模型调用',
+      image: '封面提示词与图像生成路由'
     },
     createdAt: timestamp,
     updatedAt: timestamp
