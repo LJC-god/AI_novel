@@ -130,11 +130,57 @@
 
 ## Epic 3：AI 任务 Handler
 
-状态：待开始
+状态：完成
 
-下一步入口：
+### 已执行任务
 
-- 为 11 个 ZeroStart 任务新增 `TaskHandler`。
-- 每个 handler 需要 `buildPrompt`、`normalize`、`validate`、`describeValidationErrors`。
-- 在 `electron/main/ai/tasks/index.ts` 注册新增 handler。
-- 继续复用 Epic 2 的 Zod schema 和 Epic 1 repository，不做 UI/IPC。
+- Task 3.1：实现 `zero-idea-cards.ts`。
+- Task 3.2：实现 `style-fusion-project.ts`。
+- Task 3.3：实现 `title-synopsis-generate.ts`。
+- Task 3.4：实现 `master-outline-generate.ts`。
+- Task 3.5：实现 `chapter-cards-generate.ts`。
+- Task 3.6：实现 `chapter-draft-v2.ts`。
+- Task 3.7：实现 `chapter-quality-audit.ts`。
+- Task 3.8：实现 `submission-package-generate.ts`。
+- Task 3.9：在 `electron/main/ai/tasks/index.ts` 注册新增 handler。
+- 同步实现 PRD 8.2 中剩余的 `zero-idea-merge.ts`、`style-fingerprint-normalize.ts`、`volume-outline-generate.ts`，保证 11 个新增 `AiTaskName` 全部可被 registry 找到。
+- 新增 `electron/main/ai/tasks/zero-start-common.ts`，集中复用 zero-start JSON prompt 拼装和 Zod 校验错误描述。
+
+### 修改文件
+
+- `electron/main/ai/tasks/zero-idea-cards.ts`
+- `electron/main/ai/tasks/zero-idea-merge.ts`
+- `electron/main/ai/tasks/style-fingerprint-normalize.ts`
+- `electron/main/ai/tasks/style-fusion-project.ts`
+- `electron/main/ai/tasks/title-synopsis-generate.ts`
+- `electron/main/ai/tasks/master-outline-generate.ts`
+- `electron/main/ai/tasks/volume-outline-generate.ts`
+- `electron/main/ai/tasks/chapter-cards-generate.ts`
+- `electron/main/ai/tasks/chapter-draft-v2.ts`
+- `electron/main/ai/tasks/chapter-quality-audit.ts`
+- `electron/main/ai/tasks/submission-package-generate.ts`
+- `electron/main/ai/tasks/zero-start-common.ts`
+- `electron/main/ai/tasks/index.ts`
+- `scripts/verify-zero-start-handlers.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-handlers.mjs` 初次失败于 `missing handler file electron\main\ai\tasks\zero-idea-cards.ts`。
+- 验证脚本：`node scripts/verify-zero-start-handlers.mjs`。
+  - 状态：通过。
+  - 说明：脚本验证 11 个 handler 文件存在、`outputType: 'json'`、具备 `buildPrompt` / `normalize` / `validate` / `describeValidationErrors`，并已在 `tasks/index.ts` 注册。
+- 构建命令：`corepack pnpm run build`。
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 本 Epic 只实现 AI TaskHandler，不做 UI、IPC、preload 或 AI workflow run 落库。
+- handler 当前通过 `extractJsonObject` 和 Epic 2 Zod schema 严格 parse/validate，具体任务调用与 `workflow_runs` / `workflow_run_steps` 记录将在 Epic 4 接入。
+
+### 下一步 Epic 4 计划
+
+- 在 `register-main-ipc.ts` 增量注册 zero-start IPC。
+- 在 preload 暴露 typed API。
+- 接入 `runAiTask` 与 Epic 1 zero-start repositories。
+- 记录 `workflow_runs` 和 `workflow_run_steps`。

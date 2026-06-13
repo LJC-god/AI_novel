@@ -35,6 +35,17 @@ import characterEnhance from './character-enhance'
 import worldviewEnhance from './worldview-enhance'
 import outlineEnhance from './outline-enhance'
 import relationEnhance from './relation-enhance'
+import zeroIdeaCards from './zero-idea-cards'
+import zeroIdeaMerge from './zero-idea-merge'
+import styleFingerprintNormalize from './style-fingerprint-normalize'
+import styleFusionProject from './style-fusion-project'
+import titleSynopsisGenerate from './title-synopsis-generate'
+import masterOutlineGenerate from './master-outline-generate'
+import volumeOutlineGenerate from './volume-outline-generate'
+import chapterCardsGenerate from './chapter-cards-generate'
+import chapterDraftV2 from './chapter-draft-v2'
+import chapterQualityAudit from './chapter-quality-audit'
+import submissionPackageGenerate from './submission-package-generate'
 
 /** 任务处理器注册表，按任务名称映射 */
 const TASK_REGISTRY = new Map<AiTaskName, TaskHandler>()
@@ -81,6 +92,17 @@ register(characterEnhance)
 register(worldviewEnhance)
 register(outlineEnhance)
 register(relationEnhance)
+register(zeroIdeaCards)
+register(zeroIdeaMerge)
+register(styleFingerprintNormalize)
+register(styleFusionProject)
+register(titleSynopsisGenerate)
+register(masterOutlineGenerate)
+register(volumeOutlineGenerate)
+register(chapterCardsGenerate)
+register(chapterDraftV2)
+register(chapterQualityAudit)
+register(submissionPackageGenerate)
 
 /**
  * 根据任务名称获取对应的任务处理器
