@@ -184,3 +184,47 @@
 - 在 preload 暴露 typed API。
 - 接入 `runAiTask` 与 Epic 1 zero-start repositories。
 - 记录 `workflow_runs` 和 `workflow_run_steps`。
+
+## Epic 4：IPC 与 preload
+
+状态：完成
+
+### 已执行任务
+
+- Task 4.1：新增 `electron/main/zero-start/ipc.ts`，注册 PRD 要求的 17 个 zero-start IPC handler。
+- Task 4.2：在 `electron/preload/index.ts` 通过 `window.characterArc` 暴露 zero-start typed API。
+- Task 4.3：主进程 zero-start IPC 已接入 `runAiTask` 和 `createZeroStartRepositories(db)`。
+- Task 4.4：每个 zero-start AI 调用都会写入 `workflow_runs` 和 `workflow_run_steps`，成功/失败均落库记录。
+- 新增 `electron/shared/zero-start-ipc-types.ts`，集中定义 zero-start IPC 请求/响应类型。
+- 在 `electron/main/index.ts` 注册 `registerZeroStartIpcHandlers({ ensureWorkspaceDb })`。
+- 在 `renderer/src/env.d.ts` 补充 `window.characterArc.zero*` 方法类型。
+
+### 修改文件
+
+- `electron/main/zero-start/ipc.ts`
+- `electron/shared/zero-start-ipc-types.ts`
+- `electron/main/index.ts`
+- `electron/preload/index.ts`
+- `renderer/src/env.d.ts`
+- `scripts/verify-zero-start-ipc.mjs`
+
+### 验收结果
+
+- TDD RED：`node scripts/verify-zero-start-ipc.mjs` 初次失败于 `missing electron/main/zero-start/ipc.ts`。
+- 验证脚本：`node scripts/verify-zero-start-ipc.mjs`。
+  - 状态：通过。
+  - 说明：脚本验证 17 个 IPC channel、preload 方法、renderer 类型声明、main 进程注册、repositories / runAiTask / workflow run 记录接线。
+- 构建命令：`corepack pnpm run build`。
+  - 状态：通过。
+  - 非阻塞警告仍为 Epic 0 已记录的 Vite 动态/静态混合导入 chunk 提示。
+
+### 遗留问题
+
+- 投稿包导出 IPC 在 Epic 4 先返回已生成投稿包记录；实际写出 folder/txt/docx/json 文件将在 Epic 8 完成。
+- `chapter-draft-v2` 已能落库章节正文，但章节生成后的质量报告自动串联与 UI 显示将在 Epic 7 完成。
+
+### 下一步 Epic 5 计划
+
+- 新增 `renderer/src/features/zeroStart` 和 `renderer/src/stores/zeroStart.ts`。
+- 新增/改造零基础向导和审核组件。
+- 确保用户只选题材和篇幅即可调用 `zeroGenerateIdeas` 并进入灵感卡审核。

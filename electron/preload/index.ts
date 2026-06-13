@@ -56,6 +56,40 @@ contextBridge.exposeInMainWorld('characterArc', {
   // ── AI 任务 ──
   /** 发送一次非流式 AI 生成请求，返回完整结果 */
   generateAi: (payload: unknown) => ipcRenderer.invoke('characterarc:ai-generate', toIpcPayload(payload)),
+  /** 读取或创建零基础创作流程状态 */
+  zeroGetWorkflowState: (payload: unknown) => ipcRenderer.invoke('characterarc:zero-workflow-state-get', toIpcPayload(payload)),
+  /** 更新零基础创作流程状态 */
+  zeroUpdateWorkflowState: (payload: unknown) => ipcRenderer.invoke('characterarc:zero-workflow-state-update', toIpcPayload(payload)),
+  /** 零基础流程：生成灵感卡 */
+  zeroGenerateIdeas: (payload: unknown) => ipcRenderer.invoke('characterarc:zero-ideas-generate', toIpcPayload(payload)),
+  /** 零基础流程：审核通过灵感卡 */
+  zeroApproveIdea: (payload: unknown) => ipcRenderer.invoke('characterarc:zero-idea-approve', toIpcPayload(payload)),
+  /** 零基础流程：合并灵感卡 */
+  zeroMergeIdea: (payload: unknown) => ipcRenderer.invoke('characterarc:zero-idea-merge', toIpcPayload(payload)),
+  /** 零基础流程：保存拆书风格指纹 */
+  zeroSaveStyleFingerprint: (payload: unknown) => ipcRenderer.invoke('characterarc:style-fingerprint-save', toIpcPayload(payload)),
+  /** 零基础流程：生成项目融合风格卡 */
+  zeroGenerateStyleFusion: (payload: unknown) => ipcRenderer.invoke('characterarc:style-fusion-generate', toIpcPayload(payload)),
+  /** 零基础流程：生成书名简介候选 */
+  zeroGenerateTitleSynopsis: (payload: unknown) => ipcRenderer.invoke('characterarc:title-synopsis-generate', toIpcPayload(payload)),
+  /** 零基础流程：审核通过书名简介 */
+  zeroApproveTitleSynopsis: (payload: unknown) => ipcRenderer.invoke('characterarc:title-synopsis-approve', toIpcPayload(payload)),
+  /** 零基础流程：生成全书大纲 */
+  zeroGenerateMasterOutline: (payload: unknown) => ipcRenderer.invoke('characterarc:master-outline-generate', toIpcPayload(payload)),
+  /** 零基础流程：审核通过全书大纲 */
+  zeroApproveMasterOutline: (payload: unknown) => ipcRenderer.invoke('characterarc:master-outline-approve', toIpcPayload(payload)),
+  /** 零基础流程：生成章节卡 */
+  zeroGenerateChapterCards: (payload: unknown) => ipcRenderer.invoke('characterarc:chapter-cards-generate', toIpcPayload(payload)),
+  /** 零基础流程：审核通过章节卡 */
+  zeroApproveChapterCard: (payload: unknown) => ipcRenderer.invoke('characterarc:chapter-card-approve', toIpcPayload(payload)),
+  /** 零基础流程：生成章节正文 */
+  zeroGenerateChapterDraftV2: (payload: unknown) => ipcRenderer.invoke('characterarc:chapter-draft-v2', toIpcPayload(payload)),
+  /** 零基础流程：生成章节质量报告 */
+  zeroAuditChapterQuality: (payload: unknown) => ipcRenderer.invoke('characterarc:chapter-quality-audit', toIpcPayload(payload)),
+  /** 零基础流程：生成投稿包 */
+  zeroGenerateSubmissionPackage: (payload: unknown) => ipcRenderer.invoke('characterarc:submission-package-generate', toIpcPayload(payload)),
+  /** 零基础流程：导出投稿包 */
+  zeroExportSubmissionPackage: (payload: unknown) => ipcRenderer.invoke('characterarc:submission-package-export', toIpcPayload(payload)),
   /** 取消一个正在进行的非流式 AI 任务（按 clientTaskId） */
   cancelAiTask: (clientTaskId: string) => ipcRenderer.invoke('characterarc:ai-cancel', clientTaskId),
   /** 发起流式 AI 请求，返回 streamId 用于后续事件监听和停止 */

@@ -12,6 +12,7 @@ import type {
 import { registerAiIpcHandlers } from './ai/ipc'
 import { type ReferenceNovelLocalContext } from './referenceAnalysis'
 import { registerMainIpcHandlers } from './register-main-ipc'
+import { registerZeroStartIpcHandlers } from './zero-start/ipc'
 import { initRegistry as initSkillRegistry } from './ai/skills'
 import { createWindowManager } from './window-manager'
 import {
@@ -566,6 +567,11 @@ registerMainIpcHandlers({
   buildImportedReferenceKnowledgeDocuments,
   buildImportedReferenceStylePrompt,
   formatReferenceChunkSummaries
+})
+
+// ── ZeroStart workflow IPC registration ──
+registerZeroStartIpcHandlers({
+  ensureWorkspaceDb
 })
 
 // ── AI IPC registration ──

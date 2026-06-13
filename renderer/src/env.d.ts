@@ -186,6 +186,76 @@ declare global {
         result?: unknown
         error?: string
       }>
+      zeroGetWorkflowState: (
+        payload: import('@shared/zero-start-ipc-types').ZeroWorkflowStateGetRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        state?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroUpdateWorkflowState: (
+        payload: import('@shared/zero-start-ipc-types').ZeroWorkflowStateUpdateRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        state?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroGenerateIdeas: (
+        payload: import('@shared/zero-start-ipc-types').ZeroIdeasGenerateRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroIdeasGenerateResponse>
+      zeroApproveIdea: (
+        payload: import('@shared/zero-start-ipc-types').ZeroIdeaApproveRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        card?: import('@/types/app').InspirationCard
+        workflowState?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroMergeIdea: (
+        payload: import('@shared/zero-start-ipc-types').ZeroIdeaMergeRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroIdeaMergeResponse>
+      zeroSaveStyleFingerprint: (
+        payload: import('@shared/zero-start-ipc-types').StyleFingerprintSaveRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        fingerprint?: import('@/types/app').StyleFingerprint
+        workflowState?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroGenerateStyleFusion: (
+        payload: import('@shared/zero-start-ipc-types').StyleFusionRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').StyleFusionResponse>
+      zeroGenerateTitleSynopsis: (
+        payload: import('@shared/zero-start-ipc-types').TitleSynopsisRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').TitleSynopsisResponse>
+      zeroApproveTitleSynopsis: (
+        payload: import('@shared/zero-start-ipc-types').TitleSynopsisApproveRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        candidate?: import('@/types/app').TitleSynopsisCandidate
+        workflowState?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroGenerateMasterOutline: (
+        payload: import('@shared/zero-start-ipc-types').MasterOutlineRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').MasterOutlineResponse>
+      zeroApproveMasterOutline: (
+        payload: import('@shared/zero-start-ipc-types').MasterOutlineApproveRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        outlineSnapshotId?: string
+        workflowState?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroGenerateChapterCards: (
+        payload: import('@shared/zero-start-ipc-types').ChapterCardsRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ChapterCardsResponse>
+      zeroApproveChapterCard: (
+        payload: import('@shared/zero-start-ipc-types').ChapterCardApproveRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ZeroStartIpcResponse<{
+        card?: import('@/types/app').ChapterCard
+        workflowState?: import('@/types/app').ProjectWorkflowState
+      }>>
+      zeroGenerateChapterDraftV2: (
+        payload: import('@shared/zero-start-ipc-types').ChapterDraftV2Request
+      ) => Promise<import('@shared/zero-start-ipc-types').ChapterDraftV2Response>
+      zeroAuditChapterQuality: (
+        payload: import('@shared/zero-start-ipc-types').ChapterQualityAuditRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').ChapterQualityAuditResponse>
+      zeroGenerateSubmissionPackage: (
+        payload: import('@shared/zero-start-ipc-types').SubmissionPackageRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').SubmissionPackageResponse>
+      zeroExportSubmissionPackage: (
+        payload: import('@shared/zero-start-ipc-types').SubmissionPackageExportRequest
+      ) => Promise<import('@shared/zero-start-ipc-types').SubmissionPackageExportResponse>
       cancelAiTask: (clientTaskId: string) => Promise<{
         success: boolean
         error?: string
